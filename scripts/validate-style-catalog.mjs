@@ -104,6 +104,19 @@ if (baseCssSource.includes("overflow-x:clip")) fail("horizontal overflow must no
 if (appSource.indexOf('import "./customization-overrides.css"') < appSource.indexOf('import "./curated-styles.css"')) {
   fail("the explicit customization contract must load after curated preset CSS")
 }
+for (const retiredImport of ['import "./style-presets.css"', 'import "./style-presets-extra.css"']) {
+  if (appSource.includes(retiredImport)) fail(`dead legacy stylesheet is still shipped: ${retiredImport}`)
+}
+for (const contract of [
+  'data-content-width-overridden={manualAxes.contentWidth}',
+  'data-content-width-overridden="true"',
+  'font-size: var(--hero-size, var(--text-display, 58px))',
+  '--hero-size: clamp(calc(64px * var(--type-scale))',
+]) {
+  if (!`${appSource}\n${overrideCssSource}\n${curatedCssSource}`.includes(contract)) {
+    fail(`missing authentic preset/manual override cascade contract: ${contract}`)
+  }
+}
 
 for (const contract of ["previewMode: ThemeMode", "VARIANTS_VERSION = 2", "LEGACY_VARIANTS_STORAGE_KEY", "preferredThemeMode(config.preset)"]) {
   if (!variantsSource.includes(contract)) fail(`saved variants are missing mode migration contract: ${contract}`)
@@ -119,6 +132,9 @@ if (exportSource.includes('<div className="app theme-scope"') || !exportSource.i
 }
 for (const contract of ['import("jszip")', "generateStructuralDemoSource", 'path: "src/components/StructuralStyleDemo.tsx"', 'path: "src/structural-style-demo.css"']) {
   if (!exportSource.includes(contract)) fail(`export bundle is missing its runtime/structural contract: ${contract}`)
+}
+if (!exportSource.includes("structuralDemoSource.includes(presetTypeImport)")) {
+  fail("structural export transform must fail loudly when its source import changes")
 }
 for (const duplicateRole of ["--control-height: calc", "--surface-padding: var(--space-6)", "--layout-gap: var(--space-6)"]) {
   if (exportSource.includes(duplicateRole)) fail(`export must not overwrite density-aware role token ${duplicateRole}`)

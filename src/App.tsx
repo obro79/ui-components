@@ -13,8 +13,6 @@ import { applyTheme, createThemeFromPreset, loadTheme, saveTheme, type ThemeMode
 import { createVariant, duplicateVariant, loadVariants, removeVariant, saveVariants, updateVariant } from "./variants"
 import { STYLE_PRESETS, getStylePreset, preferredThemeMode, resolveStylePresetId } from "./presets"
 import "./theme-customizer.css"
-import "./style-presets.css"
-import "./style-presets-extra.css"
 import "./save-preset.css"
 import "./authentic-styles.css"
 import "./curated-styles.css"
@@ -24,14 +22,15 @@ const sections = ["Foundations", "Buttons", "Typography", "Forms", "Cards", "Dat
 function Section({ id, label, children }: { id: string, label: string, children: React.ReactNode }) { return <section id={id} className="spec-section"><div className="section-heading"><p className="eyebrow">{label}</p><h2>{label}</h2></div>{children}</section> }
 function Specimen({ title, children }: { title: string, children: React.ReactNode }) { return <div className="specimen"><div className="specimen-bar"><span>{title}</span><Copy size={14} /></div><div className="specimen-content">{children}</div></div> }
 
-type ManualAxes = { radius: boolean; border: boolean; shadow: boolean }
-const defaultManualAxes = (): ManualAxes => ({ radius: false, border: false, shadow: false })
+type ManualAxes = { radius: boolean; border: boolean; shadow: boolean; contentWidth: boolean }
+const defaultManualAxes = (): ManualAxes => ({ radius: false, border: false, shadow: false, contentWidth: false })
 const manualAxesForConfig = (config: ReturnType<typeof loadTheme>): ManualAxes => {
   const baseline = createThemeFromPreset(config.preset)
   return {
     radius: config.radius !== baseline.radius,
     border: config.borderWidth !== baseline.borderWidth,
     shadow: config.shadow !== baseline.shadow,
+    contentWidth: config.contentWidth !== baseline.contentWidth,
   }
 }
 
@@ -46,7 +45,6 @@ export default function App() {
   const [comparisonOpen, setComparisonOpen] = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [presetName, setPresetName] = useState("")
-  const [style, setStyle] = useState(() => resolveStylePresetId(config.preset))
   const [manualAxes, setManualAxes] = useState<ManualAxes>(() => manualAxesForConfig(config))
   const [undoSnapshot, setUndoSnapshot] = useState<{ config: typeof config; previewMode: ThemeMode; manualAxes: ManualAxes; activeVariantId: string | null } | null>(null)
   const [paletteResetKey, setPaletteResetKey] = useState(0)
@@ -55,6 +53,7 @@ export default function App() {
   const saveReturnFocusRef = useRef<HTMLElement | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
   const noticeTimerRef = useRef<number | null>(null)
+  const style = resolveStylePresetId(config.preset)
 
   useEffect(() => () => {
     if (noticeTimerRef.current !== null) window.clearTimeout(noticeTimerRef.current)
@@ -131,7 +130,6 @@ export default function App() {
     const nextId = resolveStylePresetId(name)
     if (nextId === style) return
     setUndoSnapshot({ config: structuredClone(config), previewMode, manualAxes: { ...manualAxes }, activeVariantId })
-    setStyle(nextId)
     setConfig(createThemeFromPreset(nextId))
     setActiveVariantId(null)
     setManualAxes(defaultManualAxes())
@@ -146,7 +144,6 @@ export default function App() {
     setPreviewMode(undoSnapshot.previewMode)
     setManualAxes(undoSnapshot.manualAxes)
     setActiveVariantId(undoSnapshot.activeVariantId)
-    setStyle(resolveStylePresetId(undoSnapshot.config.preset))
     setUndoSnapshot(null)
     setPaletteResetKey((current) => current + 1)
     flash("Restored your previous direction.")
@@ -164,6 +161,7 @@ export default function App() {
       radius: current.radius || next.radius !== config.radius,
       border: current.border || next.borderWidth !== config.borderWidth,
       shadow: current.shadow || next.shadow !== config.shadow,
+      contentWidth: current.contentWidth || next.contentWidth !== config.contentWidth,
     }))
     setConfig(next)
   }
@@ -226,7 +224,6 @@ export default function App() {
     setConfig(variant.config)
     setPreviewMode(variant.previewMode)
     setManualAxes(manualAxesForConfig(variant.config))
-    setStyle(resolveStylePresetId(variant.config.preset))
     setActiveVariantId(id)
     setComparisonOpen(false)
     showCustomizer("colors")
@@ -247,7 +244,7 @@ export default function App() {
   const variantLibraryFull = variants.length >= 3
   const atVariantCapacity = variantLibraryFull && !activeVariantId
 
-  return <div ref={rootRef} className={`app theme-scope ${previewMode === "dark" ? "dark" : ""}`} data-style-id={style} data-layout={activePreset.recipe.layout} data-surface={activePreset.recipe.surface} data-treatment={activePreset.recipe.typography} data-geometry={activePreset.recipe.geometry} data-decoration={activePreset.recipe.decoration} data-motion={motion} data-radius-overridden={manualAxes.radius} data-border-overridden={manualAxes.border} data-shadow-overridden={manualAxes.shadow}>
+  return <div ref={rootRef} className={`app theme-scope ${previewMode === "dark" ? "dark" : ""}`} data-style-id={style} data-layout={activePreset.recipe.layout} data-surface={activePreset.recipe.surface} data-treatment={activePreset.recipe.typography} data-geometry={activePreset.recipe.geometry} data-decoration={activePreset.recipe.decoration} data-motion={motion} data-radius-overridden={manualAxes.radius} data-border-overridden={manualAxes.border} data-shadow-overridden={manualAxes.shadow} data-content-width-overridden={manualAxes.contentWidth}>
     <aside className="library-sidebar"><a className="brand" href="#top">Library</a><p className="side-label">Foundations</p>{sections.map((s) => <a key={s} href={`#${s.toLowerCase().replace(" ", "-")}`}>{s}</a>)}<div className="sidebar-bottom"><button className="theme-toggle" onClick={() => setPreviewMode(previewMode === "dark" ? "light" : "dark")}><span className="theme-dot" />{previewMode === "dark" ? "Dark theme" : "Light theme"}</button><p>v0.2 · theme editor</p></div></aside>
     <main id="top"><header className="page-hero"><div className="hero-copy"><p className="eyebrow">Design system workbench</p><h1>Your UI, all in one place.</h1><p className="lede">Create, save, and compare up to three complete visual directions.</p></div><div className="header-actions hero-toolbar"><Button variant="outline" aria-controls="customize" onClick={() => showCustomizer("styles")}><Palette size={16}/>{activePreset.name}</Button><CustomizeTrigger onClick={() => showCustomizer("colors")} />{undoSnapshot && <Button variant="ghost" onClick={undoStyle}><Undo2 size={16}/>Undo style</Button>}<Button variant="outline" onClick={requestSavePreset}><Save size={16}/>{activeVariantId ? "Update preset" : "Save preset"}</Button><Button onClick={() => setComparisonOpen(true)}><Columns3 size={16}/> Compare {variants.length}/3</Button></div></header>
       <ThemeCustomizer config={config} previewMode={previewMode} onConfigChange={updateConfig} onPreviewModeChange={setPreviewMode} onReset={resetTheme} paletteResetKey={paletteResetKey} currentStyle={style} onStyleChange={selectStyle} activePanel={customizerPanel} onPanelChange={setCustomizerPanel} />

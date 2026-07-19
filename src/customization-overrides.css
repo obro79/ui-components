@@ -1,9 +1,13 @@
 /* Final token contract. This file is loaded after preset recipes so explicit
    user choices and shared density roles remain authoritative everywhere. */
 .app.theme-scope > main {
-  max-width: min(var(--content-max, 1200px), calc(100vw - 248px));
   font-size: var(--text-base, 14px);
   line-height: var(--line-body, 1.55);
+}
+
+.app.theme-scope[data-content-width-overridden="true"] > main {
+  width: min(var(--content-max, 1200px), calc(100vw - 248px));
+  max-width: var(--content-max, 1200px);
 }
 
 .app.theme-scope :is(h1,h2,h3,h4,.card-title) {
@@ -12,8 +16,8 @@
   letter-spacing: var(--heading-tracking, -.035em);
 }
 
-.app.theme-scope .page-hero .hero-copy > h1 { font-size: clamp(38px, 5vw, var(--text-display, 58px)); }
-.app.theme-scope .section-heading h2 { font-size: var(--text-title, 28px); }
+.app.theme-scope .page-hero .hero-copy > h1 { font-size: var(--hero-size, var(--text-display, 58px)); }
+.app.theme-scope .section-heading h2 { font-size: var(--section-title-size, var(--text-title, 28px)); }
 
 .app.theme-scope .specimen-content,
 .app.theme-scope :is(.ui-dialog-content,.ui-alert-dialog-content,.ui-empty) { padding: var(--surface-padding, 24px); }
@@ -91,4 +95,8 @@
 
 @media (max-width: 600px) {
   .appearance-controls .segmented-control { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 850px) {
+  .app.theme-scope[data-content-width-overridden="true"] > main { width: 100%; max-width: none; }
 }

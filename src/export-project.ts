@@ -18,10 +18,11 @@ export type ExportedProject = Record<string, ExportedProjectFile>
 const exportBaseStyles = baseStyles.replace(/^@import[^\n]*\n/, "")
 
 function generateStructuralDemoSource(): string {
-  return structuralDemoSource.replace(
-    'import type { StylePresetId } from "../presets"',
-    "type StylePresetId = string",
-  )
+  const presetTypeImport = 'import type { StylePresetId } from "../presets"'
+  if (!structuralDemoSource.includes(presetTypeImport)) {
+    throw new Error("Structural demo export is out of sync with its preset type import.")
+  }
+  return structuralDemoSource.replace(presetTypeImport, "type StylePresetId = string")
 }
 
 const COLOR_ALIASES: Record<string, string> = {
@@ -466,7 +467,7 @@ export function generateThemeManifest(theme: ThemeConfig, initialMode: ThemeMode
   const preset = getStylePreset(theme.preset)!
   return `${JSON.stringify({
     schemaVersion: 1,
-    source: "UI Component Gallery",
+    source: "UI Made Easy",
     target: "Vite + React + Tailwind CSS v4",
     preset: { id: preset.id, name: preset.name, category: preset.category, description: preset.description },
     modeSupport: ["light", "dark"],
@@ -487,7 +488,7 @@ export function generateExportReadme(theme: ThemeConfig): string {
   return [
     `# ${preset.name} UI starter`,
     "",
-    `Generated from the UI Component Gallery as a runnable Vite + React starter. It contains Tailwind CSS v4 theme tokens, local shadcn-style primitives, a reusable component showcase, and a shadcn ${code}components.json${code} configuration.`,
+    `Generated with UI Made Easy as a runnable Vite + React starter. It contains Tailwind CSS v4 theme tokens, local shadcn-style primitives, a reusable component showcase, and a shadcn ${code}components.json${code} configuration.`,
     "",
     "## Run it",
     "",
