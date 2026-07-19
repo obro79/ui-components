@@ -1,0 +1,97 @@
+# UI Components Workbench
+
+A visual UI-system laboratory for exploring, tuning, comparing, saving, and exporting complete interface directions. It places a practical component inventory on one page and applies each design direction to the whole system, not just its colors.
+
+## What it does
+
+- Presents buttons, typography, forms, cards, tables, navigation, overlays, loading states, feedback, and other common UI primitives together.
+- Includes exactly 40 curated styles across product, layout, effects, expressive, and design-system-inspired categories.
+- Gives every style a documented reference basis, signature traits, misuse warnings, intended uses, and accessibility adaptations.
+- Changes composition, typography, density, geometry, surfaces, decoration, and motion through shared role tokens.
+- Saves named presets locally and compares up to three directions side by side.
+- Exports a Tailwind CSS v4 and shadcn/ui starter ZIP with light/dark tokens, the structural recipe, a component page, `components.json`, a manifest, and setup notes.
+
+## Style catalog
+
+| Category | Presets |
+| --- | --- |
+| Product | Minimalism, Swiss, Editorial, Functional Minimalism, SaaS Modern, Linear-inspired, Vercel-inspired, Stripe-inspired, Notion-inspired, Enterprise Dense |
+| Layout | Bento Grid, Card-first, Cinematic Mission Control, Canvas, Node-based, Split-pane Workspace, Command-centered, Timeline, Spatial Layering, Asymmetric Modular |
+| Effects & dark | Glassmorphism, Liquid Glass, Soft Spatial, Aurora/Mesh, Glow, Gradient Border, Monochrome Dark, High-contrast Dark |
+| Expressive & era | Neo-brutalism, Maximalism, Tactile Maximalism, Collage/Scrapbook, Hand-drawn, Retrofuturism, Terminal, Industrial |
+| System references | Material 3-inspired, Fluent 2-inspired, Carbon-inspired, Primer-inspired |
+
+Named product and design-system styles are clearly labeled as inspired interpretations, not official implementations.
+
+## Run locally
+
+```bash
+git clone https://github.com/obro79/ui-components.git
+cd ui-components
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite.
+
+## Useful commands
+
+```bash
+npm run dev          # Start the local workbench
+npm run test:styles  # Verify the 40-preset registry and CSS signatures
+npm run build        # Type-check and create a production build
+npm run preview      # Preview the production build
+```
+
+## How it is organized
+
+```text
+src/
+├── components/ui/          Reusable component primitives
+├── components/             Workbench, selector, comparison, and editor UI
+├── presets.ts              Single canonical preset registry
+├── style-dna.ts            Authenticity and visual-recipe types
+├── authentic-styles.css    Structural and signature style recipes
+├── theme.ts                Semantic tokens, migration, and theme variables
+├── variants.ts             Saved layout persistence
+└── export-project.ts       Tailwind/shadcn starter generation
+```
+
+The main gallery, style thumbnails, comparison previews, and exported page all consume the same preset registry and semantic theme contract.
+
+## Authenticity model
+
+Each preset records:
+
+- Its historical, product, or design-system reference basis.
+- Required typography, geometry, surface, composition, and interaction traits.
+- High-signal details that make it recognizable.
+- Common shortcuts that misrepresent the style.
+- Accessibility adaptations that preserve its character.
+
+The UI exposes this information in the active preset’s **Style DNA** panel.
+
+## Export format
+
+The generated ZIP is a reusable Tailwind v4/shadcn starting point containing:
+
+- Semantic light and dark CSS variables.
+- Typography and font stacks.
+- The selected structural and visual recipe.
+- Reduced-motion rules.
+- A reusable `ComponentShowcase.tsx` page.
+- shadcn/ui `components.json`.
+- A machine-readable theme manifest.
+- A README containing the selected style’s authenticity notes.
+
+## Accessibility
+
+The workbench retains visible keyboard focus, readable text, semantic controls, responsive behavior, contrast-aware palettes, and reduced-motion support across style changes.
+
+## Tech stack
+
+React 19, TypeScript, Vite, Lucide icons, JSZip, and shadcn-style component primitives.
+
+## License
+
+MIT
