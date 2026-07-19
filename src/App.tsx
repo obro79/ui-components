@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react"
+import { lazy, Suspense, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { Bell, ChevronDown, CircleHelp, Columns3, Copy, CreditCard, MoreHorizontal, Palette, Plus, Save, Settings, Trash2, Undo2 } from "lucide-react"
+import { Bell, ChevronDown, CircleHelp, Columns3, CreditCard, MoreHorizontal, Palette, Plus, Save, Settings, Trash2, Undo2 } from "lucide-react"
 import { Button } from "./components/ui/button"
 import { Badge } from "./components/ui/badge"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/ui/card"
@@ -9,7 +9,7 @@ import { ExtendedGallery } from "./components/ExtendedGallery"
 import { ComparisonWorkspace } from "./components/ComparisonWorkspace"
 import { StyleDnaPanel } from "./components/StyleDnaPanel"
 import { StructuralStyleDemo } from "./components/StructuralStyleDemo"
-import { applyTheme, createThemeFromPreset, loadTheme, saveTheme, type ThemeMode } from "./theme"
+import { applyTheme, createThemeFromPreset, loadTheme, saveTheme, themeDataAttributes, type ThemeMode } from "./theme"
 import { createVariant, duplicateVariant, loadVariants, removeVariant, saveVariants, updateVariant } from "./variants"
 import { STYLE_PRESETS, getStylePreset, preferredThemeMode, resolveStylePresetId } from "./presets"
 import "./theme-customizer.css"
@@ -17,17 +17,20 @@ import "./save-preset.css"
 import "./authentic-styles.css"
 import "./curated-styles.css"
 import "./customization-overrides.css"
+import "./motion-system.css"
 
-const sections = ["Foundations", "Buttons", "Typography", "Forms", "Cards", "Data display", "Navigation", "Overlays", "States", "Feedback"]
+const BuilderEssentialsGallery = lazy(() => import("./components/BuilderEssentialsGallery").then((module) => ({ default: module.BuilderEssentialsGallery })))
+
+const sections = ["Foundations", "Buttons", "Typography", "Forms", "Cards", "Data display", "Builder essentials", "Navigation", "Overlays", "States", "Feedback"]
 function Section({ id, label, children }: { id: string, label: string, children: React.ReactNode }) { return <section id={id} className="spec-section"><div className="section-heading"><p className="eyebrow">{label}</p><h2>{label}</h2></div>{children}</section> }
-function Specimen({ title, children }: { title: string, children: React.ReactNode }) { return <div className="specimen"><div className="specimen-bar"><span>{title}</span><Copy size={14} /></div><div className="specimen-content">{children}</div></div> }
+function Specimen({ title, children }: { title: string, children: React.ReactNode }) { return <div className="specimen"><div className="specimen-bar"><span>{title}</span><span>Interactive</span></div><div className="specimen-content">{children}</div></div> }
 
 type ManualAxes = { radius: boolean; border: boolean; shadow: boolean; contentWidth: boolean }
 const defaultManualAxes = (): ManualAxes => ({ radius: false, border: false, shadow: false, contentWidth: false })
 const manualAxesForConfig = (config: ReturnType<typeof loadTheme>): ManualAxes => {
   const baseline = createThemeFromPreset(config.preset)
   return {
-    radius: config.radius !== baseline.radius,
+    radius: config.controlRadius !== baseline.controlRadius || config.surfaceRadius !== baseline.surfaceRadius,
     border: config.borderWidth !== baseline.borderWidth,
     shadow: config.shadow !== baseline.shadow,
     contentWidth: config.contentWidth !== baseline.contentWidth,
@@ -158,7 +161,7 @@ export default function App() {
 
   const updateConfig = (next: typeof config) => {
     setManualAxes((current) => ({
-      radius: current.radius || next.radius !== config.radius,
+      radius: current.radius || next.controlRadius !== config.controlRadius || next.surfaceRadius !== config.surfaceRadius,
       border: current.border || next.borderWidth !== config.borderWidth,
       shadow: current.shadow || next.shadow !== config.shadow,
       contentWidth: current.contentWidth || next.contentWidth !== config.contentWidth,
@@ -240,12 +243,12 @@ export default function App() {
   }
 
   const activePreset = getStylePreset(style) ?? STYLE_PRESETS[0]
-  const motion = activePreset.category === "expressive-era" ? "snappy" : activePreset.recipe.layout === "spatial" || activePreset.recipe.surface === "glass" ? "float" : "subtle"
+  const legacyMotion = config.motionPreset === "none" ? "none" : config.motionPreset === "spring" ? "snappy" : config.motionPreset === "float" ? "float" : "subtle"
   const variantLibraryFull = variants.length >= 3
   const atVariantCapacity = variantLibraryFull && !activeVariantId
 
-  return <div ref={rootRef} className={`app theme-scope ${previewMode === "dark" ? "dark" : ""}`} data-style-id={style} data-layout={activePreset.recipe.layout} data-surface={activePreset.recipe.surface} data-treatment={activePreset.recipe.typography} data-geometry={activePreset.recipe.geometry} data-decoration={activePreset.recipe.decoration} data-motion={motion} data-radius-overridden={manualAxes.radius} data-border-overridden={manualAxes.border} data-shadow-overridden={manualAxes.shadow} data-content-width-overridden={manualAxes.contentWidth}>
-    <aside className="library-sidebar"><a className="brand" href="#top">Library</a><p className="side-label">Foundations</p>{sections.map((s) => <a key={s} href={`#${s.toLowerCase().replace(" ", "-")}`}>{s}</a>)}<div className="sidebar-bottom"><button className="theme-toggle" onClick={() => setPreviewMode(previewMode === "dark" ? "light" : "dark")}><span className="theme-dot" />{previewMode === "dark" ? "Dark theme" : "Light theme"}</button><p>v0.2 · theme editor</p></div></aside>
+  return <div ref={rootRef} className={`app theme-scope ${previewMode === "dark" ? "dark" : ""}`} data-style-id={style} data-layout={activePreset.recipe.layout} data-surface={activePreset.recipe.surface} data-treatment={activePreset.recipe.typography} data-geometry={activePreset.recipe.geometry} data-decoration={activePreset.recipe.decoration} data-motion={legacyMotion} {...themeDataAttributes(config)} data-radius-overridden={manualAxes.radius} data-border-overridden={manualAxes.border} data-shadow-overridden={manualAxes.shadow} data-content-width-overridden={manualAxes.contentWidth}>
+    <aside className="library-sidebar"><a className="brand" href="#top">Library</a><p className="side-label">Foundations</p>{sections.map((s) => <a key={s} href={`#${s.toLowerCase().replace(" ", "-")}`}>{s}</a>)}<div className="sidebar-bottom"><button className="theme-toggle" onClick={() => setPreviewMode(previewMode === "dark" ? "light" : "dark")}><span className="theme-dot" />{previewMode === "dark" ? "Dark theme" : "Light theme"}</button><p>v0.3 · ideation workbench</p></div></aside>
     <main id="top"><header className="page-hero"><div className="hero-copy"><p className="eyebrow">Design system workbench</p><h1>Your UI, all in one place.</h1><p className="lede">Create, save, and compare up to three complete visual directions.</p></div><div className="header-actions hero-toolbar"><Button variant="outline" aria-controls="customize" onClick={() => showCustomizer("styles")}><Palette size={16}/>{activePreset.name}</Button><CustomizeTrigger onClick={() => showCustomizer("colors")} />{undoSnapshot && <Button variant="ghost" onClick={undoStyle}><Undo2 size={16}/>Undo style</Button>}<Button variant="outline" onClick={requestSavePreset}><Save size={16}/>{activeVariantId ? "Update preset" : "Save preset"}</Button><Button onClick={() => setComparisonOpen(true)}><Columns3 size={16}/> Compare {variants.length}/3</Button></div></header>
       <ThemeCustomizer config={config} previewMode={previewMode} onConfigChange={updateConfig} onPreviewModeChange={setPreviewMode} onReset={resetTheme} paletteResetKey={paletteResetKey} currentStyle={style} onStyleChange={selectStyle} activePanel={customizerPanel} onPanelChange={setCustomizerPanel} />
       <StyleDnaPanel preset={activePreset} />
@@ -256,7 +259,8 @@ export default function App() {
       <Section id="forms" label="Forms"><div className="two-col"><Specimen title="Inputs"><div className="form-stack"><label>Email address<input placeholder="you@company.com" type="email" /></label><label>Project name<input defaultValue="UI components" /></label><label className="error-label">Workspace URL<input type="url" defaultValue="not a valid URL" aria-invalid="true" aria-describedby="workspace-url-error" /><small id="workspace-url-error">Please enter a valid address.</small></label></div></Specimen><Specimen title="Select & controls"><div className="form-stack"><label>Team<select defaultValue="design"><option value="design">Design</option><option>Engineering</option></select></label><label className="check"><input type="checkbox" defaultChecked /> Send me product updates</label><label className="check"><input type="radio" name="plan" defaultChecked /> Starter plan</label><label className="switch"><span>Enable notifications</span><input type="checkbox" defaultChecked /></label></div></Specimen></div></Section>
       <Section id="cards" label="Cards"><div className="card-grid"><Card><CardHeader><Badge>New</Badge><CardTitle>Start a project</CardTitle><CardDescription>Set up a new workspace from your preferred baseline.</CardDescription></CardHeader><CardFooter><Button size="sm" onClick={() => flash("Project creation started.")}>Create project</Button></CardFooter></Card><Card><CardHeader><div className="avatar">OF</div><CardTitle>Owen Fisher</CardTitle><CardDescription>Product designer · Vancouver</CardDescription></CardHeader><CardFooter><Button variant="outline" size="sm" onClick={() => flash("Profile opened.")}>View profile</Button></CardFooter></Card><Card><CardHeader><CardTitle>Pro plan</CardTitle><CardDescription>For teams that need more control.</CardDescription><p className="price">$24 <span>/ month</span></p></CardHeader><CardFooter><Button size="sm" onClick={() => flash("Upgrade flow opened.")}>Upgrade</Button></CardFooter></Card></div></Section>
       <Section id="data-display" label="Data display"><Specimen title="Table"><div className="table-wrap"><table><caption className="sr-only">Project status and recent updates</caption><thead><tr><th>Project</th><th>Status</th><th>Updated</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{[["UI Library", "Active", "Today"], ["Marketing site", "In review", "Yesterday"], ["Mobile app", "Draft", "Jul 12"]].map(([n,s,d]) => <tr key={n}><td><b>{n}</b><small>Design system</small></td><td><Badge className={s === "Active" ? "success" : "neutral"}>{s}</Badge></td><td>{d}</td><td><Button variant="ghost" size="sm" aria-label={`Actions for ${n}`} onClick={() => flash(`Opened actions for ${n}.`)}><MoreHorizontal size={17}/></Button></td></tr>)}</tbody></table></div></Specimen></Section>
-      <ExtendedGallery onAction={flash} />
+      <Suspense fallback={<section id="builder-essentials" className="builder-essentials-fallback" aria-label="Loading builder essentials"><span className="loader-spinner" aria-hidden="true" /><p>Loading builder essentials…</p></section>}><BuilderEssentialsGallery /></Suspense>
+      <ExtendedGallery onAction={flash} loadingStyle={config.loadingStyle} />
       <Section id="feedback" label="Feedback"><div className="two-col"><Specimen title="Alert"><div className="alert"><CircleHelp size={19}/><div><b>Heads up!</b><p>Your account has been successfully updated.</p></div></div></Specimen><Specimen title="Dropdown"><div ref={accountMenuRef} className="dropdown-wrap"><Button variant="outline" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)} onKeyDown={(event) => { if (event.key === "ArrowDown") { setOpen(true); requestAnimationFrame(() => accountMenuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus()); event.preventDefault() } }}>Account <ChevronDown size={16}/></Button>{open && <div className="menu" role="menu"><button role="menuitem" onClick={() => { setOpen(false); flash("Settings selected.") }}><Settings size={15}/> Settings</button><button role="menuitem" onClick={() => { setOpen(false); flash("Billing selected.") }}><CreditCard size={15}/> Billing</button><hr/><button className="danger" role="menuitem" onClick={() => { setOpen(false); flash("Delete account selected.") }}><Trash2 size={15}/> Delete account</button></div>}</div></Specimen></div></Section>
       <footer>Built as a starting point. Replace the palette and type tokens in <code>src/styles.css</code> to make it yours.</footer>
     </main>{notice && <div className="toast" role="status"><Bell size={17}/><span>{notice}</span><button onClick={() => setNotice("")}>Dismiss</button></div>}

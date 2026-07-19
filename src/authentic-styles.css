@@ -183,6 +183,10 @@
 .theme-scope[data-style-id="fluent-2-inspired"] .specimen { box-shadow: 0 2px 8px rgb(0 0 0 / .08); }
 .theme-scope[data-style-id="carbon-inspired"] :is(.button,input,select,.card,.specimen) { border-radius: 0; }
 .theme-scope[data-style-id="primer-inspired"] .badge { border: 1px solid var(--line); }
+.theme-scope[data-style-id="claymorphism"] :is(.specimen,.card,.button) { border-radius: max(18px,var(--radius-lg)); box-shadow: inset 3px 3px 7px rgb(255 255 255 / .42),inset -4px -4px 8px color-mix(in srgb,var(--accent) 12%,transparent),0 10px 22px rgb(30 41 59 / .12); }
+.theme-scope[data-style-id="organic-biophilic"] .section-heading h2::after { content: " ◒"; color: var(--accent); font-size: .55em; vertical-align: super; }
+.theme-scope[data-style-id="art-deco"] .section-heading { border-block: 1px solid color-mix(in srgb,var(--accent) 74%,var(--line)); text-transform: uppercase; }
+.theme-scope[data-style-id="skeuomorphism"] :is(input:not([type="range"]):not([type="color"]),select) { box-shadow: inset 2px 3px 6px rgb(15 23 42 / .2),inset -1px -1px 2px rgb(255 255 255 / .55); }
 
 /* Motion choices. */
 .theme-scope[data-motion="subtle"] :is(.button,.card,.specimen) { transition: transform .22s ease, box-shadow .22s ease; }

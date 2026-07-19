@@ -1,9 +1,11 @@
-import { createThemeFromPreset, isThemeConfig, spacingScale, themeVariables, type ThemeConfig, type ThemeMode } from "./theme"
+import { createThemeFromPreset, isThemeConfig, spacingScale, themeDataAttributes, themeVariables, type ThemeConfig, type ThemeMode } from "./theme"
 import { getStylePreset, preferredThemeMode } from "./presets"
+import { COMPONENT_REGISTRY, loadRegisteredComponentFiles, registeredComponentDependencies } from "./component-registry"
 import baseStyles from "./styles.css?raw"
 import authenticStyles from "./authentic-styles.css?raw"
 import curatedStyles from "./curated-styles.css?raw"
 import customizationOverrides from "./customization-overrides.css?raw"
+import motionSystemStyles from "./motion-system.css?raw"
 import structuralDemoSource from "./components/StructuralStyleDemo.tsx?raw"
 import structuralDemoStyles from "./structural-style-demo.css?raw"
 
@@ -61,8 +63,6 @@ function roleVariables(): string {
   --text-title-role: calc(1.875rem * var(--type-scale));
   --text-display-role: calc(2.5rem * var(--type-scale));
   --control-padding-inline: var(--control-padding-x);
-  --radius-control: var(--radius-md);
-  --radius-surface: var(--radius-lg);
   --radius-full: 999px;`
 }
 
@@ -160,18 +160,16 @@ export function generateComponentShowcase(theme: ThemeConfig, initialMode: Theme
   const preset = getStylePreset(theme.preset)
   if (!preset) throw new TypeError("Cannot export an unknown preset")
   const baseline = createThemeFromPreset(theme.preset)
-  const radiusOverridden = theme.radius !== baseline.radius
+  const radiusOverridden = theme.controlRadius !== baseline.controlRadius || theme.surfaceRadius !== baseline.surfaceRadius
   const borderOverridden = theme.borderWidth !== baseline.borderWidth
   const shadowOverridden = theme.shadow !== baseline.shadow
-  const motion = preset.category === "expressive-era" ? "snappy" : preset.recipe.layout === "spatial" || preset.recipe.surface === "glass" ? "float" : "subtle"
+  const legacyMotion = theme.motionPreset === "none" ? "none" : theme.motionPreset === "spring" ? "snappy" : theme.motionPreset === "float" ? "float" : "subtle"
+  const dataAttributes = themeDataAttributes(theme)
   return `import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
+import { BuilderEssentialsGallery } from "@/components/BuilderEssentialsGallery"
 import { StructuralStyleDemo } from "@/components/StructuralStyleDemo"
 
 export function ComponentShowcase() {
@@ -179,7 +177,7 @@ export function ComponentShowcase() {
   const rootClassName = dark ? "app theme-scope exported-theme-scope dark" : "app theme-scope exported-theme-scope"
 
   return (
-    <div className={rootClassName} data-style-id="${preset.id}" data-layout="${preset.recipe.layout}" data-surface="${preset.recipe.surface}" data-treatment="${preset.recipe.typography}" data-geometry="${preset.recipe.geometry}" data-decoration="${preset.recipe.decoration}" data-motion="${motion}" data-theme-mode={dark ? "dark" : "light"} data-radius-overridden="${radiusOverridden}" data-border-overridden="${borderOverridden}" data-shadow-overridden="${shadowOverridden}">
+    <div className={rootClassName} data-style-id="${preset.id}" data-layout="${preset.recipe.layout}" data-surface="${preset.recipe.surface}" data-treatment="${preset.recipe.typography}" data-geometry="${preset.recipe.geometry}" data-decoration="${preset.recipe.decoration}" data-motion="${legacyMotion}" data-theme-mode={dark ? "dark" : "light"} data-theme-version="${dataAttributes["data-theme-version"]}" data-motion-preset="${dataAttributes["data-motion-preset"]}" data-motion-speed="${dataAttributes["data-motion-speed"]}" data-motion-overlay="${dataAttributes["data-motion-overlay"]}" data-loading-style="${dataAttributes["data-loading-style"]}" data-surface-treatment="${dataAttributes["data-surface-treatment"]}" data-radius-overridden="${radiusOverridden}" data-border-overridden="${borderOverridden}" data-shadow-overridden="${shadowOverridden}">
       <main className="theme-showcase">
         <header className="page-hero theme-showcase-header">
           <div className="hero-copy">
@@ -199,7 +197,7 @@ export function ComponentShowcase() {
           </div>
         </header>
 
-        <Separator />
+        <div className="ui-separator ui-separator-horizontal" role="separator" />
 
         <StructuralStyleDemo style="${preset.id}" />
 
@@ -216,12 +214,12 @@ export function ComponentShowcase() {
             </CardHeader>
             <CardContent className="card-content space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="showcase-email">Email</Label>
-                <Input className="input" id="showcase-email" type="email" placeholder="you@example.com" />
+                <label className="label" htmlFor="showcase-email">Email</label>
+                <input className="input" id="showcase-email" type="email" placeholder="you@example.com" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="showcase-message">Message</Label>
-                <Textarea className="input" id="showcase-message" placeholder="Tell us what you are building…" />
+                <label className="label" htmlFor="showcase-message">Message</label>
+                <textarea className="textarea" id="showcase-message" placeholder="Tell us what you are building…" />
               </div>
             </CardContent>
             <CardFooter className="card-footer justify-end gap-2">
@@ -238,16 +236,18 @@ export function ComponentShowcase() {
                 Use semantic colors so every component responds to light and dark themes consistently.
               </p>
             </div>
-            <Separator />
+            <div className="ui-separator ui-separator-horizontal" role="separator" />
             <div className="theme-action-row">
               <Badge className="badge">Default</Badge>
-              <Badge className="badge" variant="secondary">Secondary</Badge>
-              <Badge className="badge" variant="outline">Outline</Badge>
-              <Badge className="badge" variant="destructive">Destructive</Badge>
+              <Badge className="badge badge-secondary">Secondary</Badge>
+              <Badge className="badge badge-outline">Outline</Badge>
+              <Badge className="badge badge-destructive">Destructive</Badge>
             </div>
           </div>
           </div>
         </section>
+
+        <BuilderEssentialsGallery />
       </main>
     </div>
   )
@@ -259,6 +259,7 @@ export function generateComponentsJson(): string {
   return `${JSON.stringify({
     $schema: "https://ui.shadcn.com/schema.json",
     style: "new-york",
+    base: "base-ui",
     rsc: false,
     tsx: true,
     tailwind: { config: "", css: "src/app/globals.css", baseColor: "neutral", cssVariables: true, prefix: "" },
@@ -269,13 +270,24 @@ export function generateComponentsJson(): string {
 
 export function generatePackageJson(theme: ThemeConfig): string {
   const preset = getStylePreset(theme.preset)!
+  const dependencyVersions: Record<string, string> = {
+    "@base-ui/react": "^1.6.0",
+    "@tanstack/react-table": "^8.21.3",
+    cmdk: "^1.1.1",
+    "lucide-react": "^1.25.0",
+    "react-day-picker": "^10.0.1",
+    sonner: "^2.0.7",
+  }
+  const registeredDependencies = Object.fromEntries(
+    registeredComponentDependencies().map((dependency) => [dependency, dependencyVersions[dependency]]),
+  )
   return `${JSON.stringify({
     name: `${preset.id}-ui-starter`,
     private: true,
     version: "0.1.0",
     type: "module",
     scripts: { dev: "vite", build: "tsc --noEmit && vite build", preview: "vite preview" },
-    dependencies: { "lucide-react": "^1.25.0", react: "^19.2.0", "react-dom": "^19.2.0" },
+    dependencies: { ...registeredDependencies, react: "^19.2.0", "react-dom": "^19.2.0" },
     devDependencies: {
       "@tailwindcss/vite": "^4.1.0",
       "@types/node": "^24.0.0",
@@ -320,7 +332,6 @@ export function generateTsconfig(): string {
       isolatedModules: true,
       noEmit: true,
       jsx: "react-jsx",
-      baseUrl: ".",
       paths: { "@/*": ["./src/*"] },
       types: ["vite/client", "node"],
     },
@@ -362,119 +373,22 @@ createRoot(document.getElementById("root")!).render(
 `
 }
 
-export function generateUtils(): string {
-  return `export function cn(...values: Array<string | false | null | undefined>): string {
-  return values.filter(Boolean).join(" ")
-}
-`
-}
-
-function generatedUiFiles(): ExportedProjectFile[] {
-  return [
-    {
-      path: "src/components/ui/button.tsx",
-      mimeType: "text/tsx",
-      content: `import type { ButtonHTMLAttributes } from "react"
-import { cn } from "@/lib/utils"
-
-type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive"
-type ButtonSize = "sm" | "default" | "lg"
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: ButtonSize }
-
-export function Button({ className, variant = "default", size = "default", type = "button", ...props }: ButtonProps) {
-  return <button type={type} className={cn("button", "button-" + variant, "button-size-" + size, className)} {...props} />
-}
-`,
-    },
-    {
-      path: "src/components/ui/badge.tsx",
-      mimeType: "text/tsx",
-      content: `import type { HTMLAttributes } from "react"
-import { cn } from "@/lib/utils"
-
-type BadgeVariant = "default" | "secondary" | "outline" | "destructive"
-type BadgeProps = HTMLAttributes<HTMLSpanElement> & { variant?: BadgeVariant }
-
-export function Badge({ className, variant = "default", ...props }: BadgeProps) {
-  return <span className={cn("badge", "badge-" + variant, className)} {...props} />
-}
-`,
-    },
-    {
-      path: "src/components/ui/card.tsx",
-      mimeType: "text/tsx",
-      content: `import type { HTMLAttributes } from "react"
-import { cn } from "@/lib/utils"
-
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) { return <div className={cn("card", className)} {...props} /> }
-export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) { return <div className={cn("card-header", className)} {...props} /> }
-export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) { return <h3 className={cn("card-title", className)} {...props} /> }
-export function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) { return <p className={cn("card-description", className)} {...props} /> }
-export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) { return <div className={cn("card-content", className)} {...props} /> }
-export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) { return <div className={cn("card-footer", className)} {...props} /> }
-`,
-    },
-    {
-      path: "src/components/ui/input.tsx",
-      mimeType: "text/tsx",
-      content: `import type { InputHTMLAttributes } from "react"
-import { cn } from "@/lib/utils"
-
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn("input", className)} {...props} />
-}
-`,
-    },
-    {
-      path: "src/components/ui/label.tsx",
-      mimeType: "text/tsx",
-      content: `import type { LabelHTMLAttributes } from "react"
-import { cn } from "@/lib/utils"
-
-export function Label({ className, ...props }: LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn("label", className)} {...props} />
-}
-`,
-    },
-    {
-      path: "src/components/ui/separator.tsx",
-      mimeType: "text/tsx",
-      content: `import type { HTMLAttributes } from "react"
-import { cn } from "@/lib/utils"
-
-type SeparatorProps = HTMLAttributes<HTMLDivElement> & { orientation?: "horizontal" | "vertical" }
-export function Separator({ className, orientation = "horizontal", ...props }: SeparatorProps) {
-  return <div role="separator" aria-orientation={orientation} className={cn("ui-separator", "ui-separator-" + orientation, className)} {...props} />
-}
-`,
-    },
-    {
-      path: "src/components/ui/textarea.tsx",
-      mimeType: "text/tsx",
-      content: `import type { TextareaHTMLAttributes } from "react"
-import { cn } from "@/lib/utils"
-
-export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cn("textarea", className)} {...props} />
-}
-`,
-    },
-  ]
-}
-
 export function generateThemeManifest(theme: ThemeConfig, initialMode: ThemeMode = preferredThemeMode(theme.preset)): string {
   assertTheme(theme)
   const preset = getStylePreset(theme.preset)!
   return `${JSON.stringify({
-    schemaVersion: 1,
+    schemaVersion: 3,
     source: "UI Made Easy",
     target: "Vite + React + Tailwind CSS v4",
     preset: { id: preset.id, name: preset.name, category: preset.category, description: preset.description },
     modeSupport: ["light", "dark"],
     initialMode,
     layout: { contentWidth: theme.contentWidth, maxWidth: themeVariables(theme, "light")["content-max"], density: theme.density },
-    typography: { headingFont: theme.headingFont, bodyFont: theme.bodyFont, typeScale: theme.typeScale },
-    geometry: { baseSpacing: theme.baseSpacing, radius: theme.radius, borderWidth: theme.borderWidth, shadow: theme.shadow },
+    typography: { headingFont: theme.headingFont, bodyFont: theme.bodyFont, typeScale: theme.typeScale, headingWeight: theme.headingWeight, bodyWeight: theme.bodyWeight, tracking: theme.tracking },
+    geometry: { baseSpacing: theme.baseSpacing, controlRadius: theme.controlRadius, surfaceRadius: theme.surfaceRadius, borderWidth: theme.borderWidth, shadow: theme.shadow, surfaceTreatment: theme.surfaceTreatment },
+    motion: { preset: theme.motionPreset, speed: theme.motionSpeed, loadingStyle: theme.loadingStyle, ...themeDataAttributes(theme) },
+    components: COMPONENT_REGISTRY.map(({ id, export: metadata }) => ({ id, export: metadata })),
+    dependencies: registeredComponentDependencies(),
     recipes: ["app", "theme-scope", "page-hero", "hero-copy", "hero-toolbar", "header-actions", "spec-section", "button", "card", "specimen", "badge", "input", "theme-showcase", "theme-showcase-header", "theme-display", "theme-lead", "theme-action-row", "theme-content-grid", "theme-surface", "theme-surface-stack", "theme-title", "theme-muted"],
     structuralRecipe: preset.recipe,
     authenticity: { ...preset.authenticity, inspiredReference: preset.category === "system-reference" },
@@ -488,7 +402,7 @@ export function generateExportReadme(theme: ThemeConfig): string {
   return [
     `# ${preset.name} UI starter`,
     "",
-    `Generated with UI Made Easy as a runnable Vite + React starter. It contains Tailwind CSS v4 theme tokens, local shadcn-style primitives, a reusable component showcase, and a shadcn ${code}components.json${code} configuration.`,
+    `Generated with UI Made Easy as a runnable Vite + React starter. It contains Tailwind CSS v4 theme tokens, local shadcn-style primitives, eight builder-essential patterns, a reusable component showcase, and a shadcn ${code}components.json${code} configuration.`,
     "",
     "## Run it",
     "",
@@ -518,13 +432,19 @@ export function generateExportReadme(theme: ThemeConfig): string {
     `- Preset: ${preset.name} (${preset.id})`,
     `- Density: ${theme.density}`,
     `- Base spacing: ${theme.baseSpacing}px`,
-    `- Radius: ${theme.radius}px`,
+    `- Control radius: ${theme.controlRadius}px`,
+    `- Surface radius: ${theme.surfaceRadius}px`,
+    `- Surface treatment: ${theme.surfaceTreatment}`,
     `- Shadow: ${theme.shadow}`,
     `- Border width: ${theme.borderWidth}px`,
     `- Type scale: ${theme.typeScale}`,
     `- Content width: ${theme.contentWidth}`,
     `- Heading font: ${theme.headingFont}`,
     `- Body font: ${theme.bodyFont}`,
+    `- Heading/body weight: ${theme.headingWeight} / ${theme.bodyWeight}`,
+    `- Tracking: ${theme.tracking}em`,
+    `- Motion: ${theme.motionPreset} · ${theme.motionSpeed}`,
+    `- Loading: ${theme.loadingStyle}`,
     "",
     "## Style authenticity",
     "",
@@ -540,8 +460,13 @@ export function generateExportReadme(theme: ThemeConfig): string {
   ].join("\n")
 }
 
-export function generateExportProject(theme: ThemeConfig, initialMode: ThemeMode = preferredThemeMode(theme.preset)): ExportedProject {
+export async function generateExportProject(theme: ThemeConfig, initialMode: ThemeMode = preferredThemeMode(theme.preset)): Promise<ExportedProject> {
   assertTheme(theme)
+  const registeredFiles = await Promise.all((await loadRegisteredComponentFiles()).map(async (definition) => ({
+    path: definition.path,
+    content: await definition.load(),
+    mimeType: definition.mimeType,
+  } satisfies ExportedProjectFile)))
   const files: ExportedProjectFile[] = [
     { path: "package.json", content: generatePackageJson(theme), mimeType: "application/json" },
     { path: "index.html", content: generateIndexHtml(theme), mimeType: "text/html" },
@@ -549,13 +474,12 @@ export function generateExportProject(theme: ThemeConfig, initialMode: ThemeMode
     { path: "tsconfig.json", content: generateTsconfig(), mimeType: "application/json" },
     { path: "src/main.tsx", content: generateMain(), mimeType: "text/tsx" },
     { path: "src/app/globals.css", content: generateTailwindGlobals(theme), mimeType: "text/css" },
-    { path: "src/app/style-recipe.css", content: `${exportBaseStyles}\n${authenticStyles}\n${curatedStyles}\n${customizationOverrides}\n${exportedScopeStyles(theme)}`, mimeType: "text/css" },
+    { path: "src/app/style-recipe.css", content: `${exportBaseStyles}\n${authenticStyles}\n${curatedStyles}\n${customizationOverrides}\n${motionSystemStyles}\n${exportedScopeStyles(theme)}`, mimeType: "text/css" },
     { path: "src/app/fonts.css", content: `@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');\n`, mimeType: "text/css" },
-    { path: "src/lib/utils.ts", content: generateUtils(), mimeType: "text/typescript" },
     { path: "src/components/ComponentShowcase.tsx", content: generateComponentShowcase(theme, initialMode), mimeType: "text/tsx" },
     { path: "src/components/StructuralStyleDemo.tsx", content: generateStructuralDemoSource(), mimeType: "text/tsx" },
     { path: "src/structural-style-demo.css", content: structuralDemoStyles, mimeType: "text/css" },
-    ...generatedUiFiles(),
+    ...registeredFiles,
     { path: "components.json", content: generateComponentsJson(), mimeType: "application/json" },
     { path: "theme-manifest.json", content: generateThemeManifest(theme, initialMode), mimeType: "application/json" },
     { path: "README.md", content: generateExportReadme(theme), mimeType: "text/markdown" },
@@ -568,7 +492,7 @@ export async function downloadStarterKitZip(theme: ThemeConfig, requestedName = 
   if (typeof document === "undefined" || typeof URL === "undefined") throw new Error("File downloads are only available in a browser")
   const { default: JSZip } = await import("jszip")
   const zip = new JSZip()
-  for (const file of Object.values(generateExportProject(theme, initialMode))) zip.file(file.path, file.content)
+  for (const file of Object.values(await generateExportProject(theme, initialMode))) zip.file(file.path, file.content)
   const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement("a")

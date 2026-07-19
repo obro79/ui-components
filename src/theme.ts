@@ -1,9 +1,16 @@
 import { STYLE_PRESETS, getStylePreset, isStylePresetId, resolveStylePresetId } from "./presets"
+import { isMotionPreset, isMotionSpeed, resolveMotionRecipe } from "./motion"
+import type { MotionPreset, MotionSpeed } from "./motion"
+
+export { MOTION_PRESETS, MOTION_RECIPES, MOTION_SPEEDS, resolveMotionRecipe } from "./motion"
+export type { MotionOverlayBehavior, MotionPreset, MotionRecipe, MotionSpeed, ResolvedMotionRecipe } from "./motion"
 
 export type ThemeMode = "light" | "dark"
 export type Density = "compact" | "default" | "comfortable"
 export type Shadow = "none" | "soft" | "medium" | "strong"
 export type ContentWidth = "narrow" | "standard" | "wide"
+export type LoadingStyle = "spinner" | "dots" | "pulse" | "bars" | "orbit" | "skeleton"
+export type SurfaceTreatment = "preset" | "flat" | "outline" | "elevated" | "glass"
 
 export type SemanticPalette = {
   background: string
@@ -20,19 +27,30 @@ export type SemanticPalette = {
 }
 
 export type ThemeConfig = {
-  version: 2
+  version: 3
   preset: string
   light: SemanticPalette
   dark: SemanticPalette
   density: Density
   baseSpacing: number
+  /** Compatibility radius retained while the editor adopts the role-specific controls. */
   radius: number
+  controlRadius: number
+  surfaceRadius: number
   shadow: Shadow
   borderWidth: number
   typeScale: number
   contentWidth: ContentWidth
   headingFont: string
   bodyFont: string
+  headingWeight: number
+  bodyWeight: number
+  /** Global letter spacing in em units. */
+  tracking: number
+  motionPreset: MotionPreset
+  motionSpeed: MotionSpeed
+  loadingStyle: LoadingStyle
+  surfaceTreatment: SurfaceTreatment
 }
 
 export type ContrastCheck = {
@@ -44,9 +62,9 @@ export type ContrastCheck = {
   aaaNormal: boolean
 }
 
-export const THEME_STORAGE_KEY = "ui-component-gallery.theme.v2"
-export const THEME_VERSION = 2 as const
-const LEGACY_THEME_STORAGE_KEY = "ui-component-gallery.theme.v1"
+export const THEME_STORAGE_KEY = "ui-component-gallery.theme.v3"
+export const THEME_VERSION = 3 as const
+const LEGACY_THEME_STORAGE_KEYS = ["ui-component-gallery.theme.v2", "ui-component-gallery.theme.v1"] as const
 export const DEFAULT_HEADING_FONT = "Manrope, ui-sans-serif, system-ui, sans-serif"
 export const DEFAULT_BODY_FONT = "Inter, ui-sans-serif, system-ui, sans-serif"
 
@@ -167,21 +185,64 @@ export function generatePalettes(seed: string): Pick<ThemeConfig, "light" | "dar
 /** Generate matching light and dark semantic palettes from one seed color. */
 export const generatePalette = generatePalettes
 
-type PresetStyle = Pick<ThemeConfig, "density" | "baseSpacing" | "radius" | "shadow" | "borderWidth" | "typeScale" | "contentWidth" | "headingFont" | "bodyFont">
-const DEFAULT_STYLE: PresetStyle = { density: "default", baseSpacing: 4, radius: 8, shadow: "soft", borderWidth: 1, typeScale: 1, contentWidth: "standard", headingFont: DEFAULT_HEADING_FONT, bodyFont: DEFAULT_BODY_FONT }
+type PresetStyle = Pick<ThemeConfig,
+  "density" | "baseSpacing" | "radius" | "controlRadius" | "surfaceRadius" | "shadow" | "borderWidth" |
+  "typeScale" | "contentWidth" | "headingFont" | "bodyFont" | "headingWeight" | "bodyWeight" |
+  "tracking" | "motionPreset" | "motionSpeed" | "loadingStyle" | "surfaceTreatment"
+>
+const DEFAULT_STYLE: PresetStyle = {
+  density: "default",
+  baseSpacing: 4,
+  radius: 8,
+  controlRadius: 8,
+  surfaceRadius: 12,
+  shadow: "soft",
+  borderWidth: 1,
+  typeScale: 1,
+  contentWidth: "standard",
+  headingFont: DEFAULT_HEADING_FONT,
+  bodyFont: DEFAULT_BODY_FONT,
+  headingWeight: 700,
+  bodyWeight: 400,
+  tracking: 0,
+  motionPreset: "fade",
+  motionSpeed: "normal",
+  loadingStyle: "spinner",
+  surfaceTreatment: "preset",
+}
 export const PRESET_NAMES = Object.freeze(STYLE_PRESETS.map((preset) => preset.name))
 
-const typographyStyle = (recipe: string): Pick<PresetStyle, "headingFont" | "bodyFont" | "typeScale"> => ({
+const typographyStyle = (recipe: string): Pick<PresetStyle, "headingFont" | "bodyFont" | "typeScale" | "headingWeight" | "bodyWeight" | "tracking"> => ({
   headingFont: recipe === "editorial-serif" ? "'Playfair Display', Georgia, serif" : recipe === "mono" ? "'DM Mono', ui-monospace, monospace" : recipe === "display" ? "'Space Grotesk', Manrope, sans-serif" : recipe === "humanist-sans" ? "'Source Sans 3', Arial, sans-serif" : recipe === "geometric-sans" ? "Manrope, ui-sans-serif, sans-serif" : DEFAULT_HEADING_FONT,
   bodyFont: recipe === "mono" ? "'DM Mono', ui-monospace, monospace" : recipe === "humanist-sans" ? "'Source Sans 3', Arial, sans-serif" : DEFAULT_BODY_FONT,
   typeScale: recipe === "display" ? 1.1 : recipe === "editorial-serif" ? 1.06 : recipe === "mono" ? .95 : 1,
+  headingWeight: recipe === "editorial-serif" ? 600 : recipe === "mono" ? 500 : 700,
+  bodyWeight: 400,
+  tracking: recipe === "display" ? -0.015 : recipe === "editorial-serif" ? -0.005 : recipe === "mono" ? 0.01 : 0,
 })
+
+const motionStyle = (preset: (typeof STYLE_PRESETS)[number]): Pick<PresetStyle, "motionPreset" | "motionSpeed" | "loadingStyle"> => {
+  const { category, id, recipe } = preset
+  const motionPreset: MotionPreset = category === "expressive-era" ? "spring" :
+    recipe.surface === "glass" || recipe.layout === "spatial" ? "float" :
+      recipe.layout === "timeline" ? "drop" :
+        recipe.surface === "raised" || recipe.surface === "layered" || recipe.surface === "soft" ? "rise" : "fade"
+  const motionSpeed: MotionSpeed = recipe.density === "compact" ? "fast" :
+    motionPreset === "float" || motionPreset === "spring" || recipe.density === "spacious" ? "slow" : "normal"
+  const loadingStyle: LoadingStyle = id === "terminal" || recipe.layout === "nodes" || recipe.layout === "dense" ? "bars" :
+    recipe.layout === "mission-control" || recipe.surface === "glass" ? "orbit" :
+      recipe.typography === "editorial-serif" || id === "minimalism" || recipe.layout === "split-pane" ? "skeleton" :
+        category === "expressive-era" || recipe.surface === "raised" ? "dots" :
+          recipe.decoration === "mesh" || recipe.layout === "timeline" ? "pulse" : "spinner"
+  return { motionPreset, motionSpeed, loadingStyle }
+}
 
 const recipeStyle = (preset: (typeof STYLE_PRESETS)[number]): PresetStyle => {
   const { recipe } = preset
   const radius = { square: 0, subtle: 6, rounded: 14, pill: 24, mixed: 10, organic: 20 }[recipe.geometry]
+  const surfaceRadius = Math.min(48, radius + (recipe.geometry === "organic" ? 8 : recipe.geometry === "pill" ? 0 : 4))
   const density: Density = recipe.density === "compact" ? "compact" : recipe.density === "spacious" ? "comfortable" : recipe.density
-  return { ...DEFAULT_STYLE, ...typographyStyle(recipe.typography), density, baseSpacing: recipe.density === "spacious" ? 6 : recipe.density === "compact" ? 3 : 4, radius,
+  return { ...DEFAULT_STYLE, ...typographyStyle(recipe.typography), ...motionStyle(preset), density, baseSpacing: recipe.density === "spacious" ? 6 : recipe.density === "compact" ? 3 : 4, radius, controlRadius: radius, surfaceRadius,
     shadow: recipe.surface === "flat" || recipe.surface === "outlined" ? "none" : recipe.surface === "raised" || recipe.surface === "layered" ? "medium" : "soft",
     borderWidth: recipe.geometry === "square" && recipe.contrast === "high" ? 2 : recipe.surface === "flat" ? 0 : 1,
     contentWidth: recipe.layout === "document" ? "narrow" : ["dashboard", "grid", "bento", "workspace", "dense", "mission-control", "canvas", "nodes", "split-pane", "asymmetric"].includes(recipe.layout) ? "wide" : "standard" }
@@ -198,6 +259,15 @@ const PALETTE_KEYS: (keyof SemanticPalette)[] = [
   "background", "surface", "foreground", "mutedForeground", "border", "primary",
   "primaryForeground", "secondary", "destructive", "success", "focusRing",
 ]
+export const LOADING_STYLES = ["spinner", "dots", "pulse", "bars", "orbit", "skeleton"] as const satisfies readonly LoadingStyle[]
+export const SURFACE_TREATMENTS = ["preset", "flat", "outline", "elevated", "glass"] as const satisfies readonly SurfaceTreatment[]
+
+const isNumberInRange = (value: unknown, min: number, max: number): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value >= min && value <= max
+const isLoadingStyle = (value: unknown): value is LoadingStyle =>
+  typeof value === "string" && (LOADING_STYLES as readonly string[]).includes(value)
+const isSurfaceTreatment = (value: unknown): value is SurfaceTreatment =>
+  typeof value === "string" && (SURFACE_TREATMENTS as readonly string[]).includes(value)
 
 export function isThemeConfig(value: unknown): value is ThemeConfig {
   if (!value || typeof value !== "object") return false
@@ -206,13 +276,20 @@ export function isThemeConfig(value: unknown): value is ThemeConfig {
     PALETTE_KEYS.every((key) => typeof (palette as Record<string, unknown>)[key] === "string" && isValidHex((palette as Record<string, string>)[key])))
   return theme.version === THEME_VERSION && typeof theme.preset === "string" && isStylePresetId(theme.preset) &&
     (theme.density === "compact" || theme.density === "default" || theme.density === "comfortable") &&
-    typeof theme.baseSpacing === "number" && theme.baseSpacing >= 2 && theme.baseSpacing <= 8 &&
-    typeof theme.radius === "number" && theme.radius >= 0 && theme.radius <= 24 &&
+    isNumberInRange(theme.baseSpacing, 2, 8) &&
+    isNumberInRange(theme.radius, 0, 24) &&
+    isNumberInRange(theme.controlRadius, 0, 48) &&
+    isNumberInRange(theme.surfaceRadius, 0, 48) &&
     (theme.shadow === "none" || theme.shadow === "soft" || theme.shadow === "medium" || theme.shadow === "strong") &&
-    typeof theme.borderWidth === "number" && theme.borderWidth >= 0 && theme.borderWidth <= 3 &&
-    typeof theme.typeScale === "number" && theme.typeScale >= 0.9 && theme.typeScale <= 1.15 &&
+    isNumberInRange(theme.borderWidth, 0, 3) &&
+    isNumberInRange(theme.typeScale, 0.9, 1.15) &&
     typeof theme.headingFont === "string" && theme.headingFont.trim().length > 0 &&
     typeof theme.bodyFont === "string" && theme.bodyFont.trim().length > 0 &&
+    isNumberInRange(theme.headingWeight, 300, 900) &&
+    isNumberInRange(theme.bodyWeight, 300, 900) &&
+    isNumberInRange(theme.tracking, -0.1, 0.2) &&
+    isMotionPreset(theme.motionPreset) && isMotionSpeed(theme.motionSpeed) &&
+    isLoadingStyle(theme.loadingStyle) && isSurfaceTreatment(theme.surfaceTreatment) &&
     (theme.contentWidth === "narrow" || theme.contentWidth === "standard" || theme.contentWidth === "wide") &&
     validPalette(theme.light) && validPalette(theme.dark)
 }
@@ -230,19 +307,41 @@ export function migrateThemeConfig(value: unknown): ThemeConfig | null {
   if (isThemeConfig(value)) return enforceAccessibleTheme(value)
   if (!value || typeof value !== "object" || ![1, 2].includes(Number((value as { version?: unknown }).version))) return null
   const legacy = value as Record<string, unknown>
-  const candidate = { ...DEFAULT_STYLE, ...legacy, version: THEME_VERSION,
-    preset: resolveStylePresetId(String(legacy.preset ?? "minimalism")),
-    headingFont: typeof legacy.headingFont === "string" ? legacy.headingFont : DEFAULT_HEADING_FONT,
-    bodyFont: typeof legacy.bodyFont === "string" ? legacy.bodyFont : DEFAULT_BODY_FONT } as ThemeConfig
+  const preset = resolveStylePresetId(String(legacy.preset ?? "minimalism"))
+  const baseline = createThemeFromPreset(preset)
+  const radius = isNumberInRange(legacy.radius, 0, 24) ? legacy.radius : baseline.radius
+  const surfaceRadiusDelta = baseline.surfaceRadius - baseline.controlRadius
+  const candidate = { ...baseline, ...legacy, version: THEME_VERSION, preset,
+    radius,
+    controlRadius: isNumberInRange(legacy.controlRadius, 0, 48) ? legacy.controlRadius : radius,
+    surfaceRadius: isNumberInRange(legacy.surfaceRadius, 0, 48) ? legacy.surfaceRadius : Math.min(48, radius + surfaceRadiusDelta),
+    headingFont: typeof legacy.headingFont === "string" ? legacy.headingFont : baseline.headingFont,
+    bodyFont: typeof legacy.bodyFont === "string" ? legacy.bodyFont : baseline.bodyFont,
+    headingWeight: isNumberInRange(legacy.headingWeight, 300, 900) ? legacy.headingWeight : baseline.headingWeight,
+    bodyWeight: isNumberInRange(legacy.bodyWeight, 300, 900) ? legacy.bodyWeight : baseline.bodyWeight,
+    tracking: isNumberInRange(legacy.tracking, -0.1, 0.2) ? legacy.tracking : baseline.tracking,
+    motionPreset: isMotionPreset(legacy.motionPreset) ? legacy.motionPreset : baseline.motionPreset,
+    motionSpeed: isMotionSpeed(legacy.motionSpeed) ? legacy.motionSpeed : baseline.motionSpeed,
+    loadingStyle: isLoadingStyle(legacy.loadingStyle) ? legacy.loadingStyle : baseline.loadingStyle,
+    surfaceTreatment: isSurfaceTreatment(legacy.surfaceTreatment) ? legacy.surfaceTreatment : baseline.surfaceTreatment,
+  } as ThemeConfig
   return isThemeConfig(candidate) ? enforceAccessibleTheme(candidate) : null
 }
 
 export function loadTheme(storage: Pick<Storage, "getItem"> | null = typeof localStorage === "undefined" ? null : localStorage): ThemeConfig {
   if (!storage) return structuredClone(DEFAULT_THEME)
   try {
-    const raw = storage.getItem(THEME_STORAGE_KEY) ?? storage.getItem(LEGACY_THEME_STORAGE_KEY)
-    const parsed: unknown = raw ? JSON.parse(raw) : null
-    return migrateThemeConfig(parsed) ?? structuredClone(DEFAULT_THEME)
+    for (const key of [THEME_STORAGE_KEY, ...LEGACY_THEME_STORAGE_KEYS]) {
+      const raw = storage.getItem(key)
+      if (!raw) continue
+      try {
+        const migrated = migrateThemeConfig(JSON.parse(raw) as unknown)
+        if (migrated) return migrated
+      } catch {
+        // A corrupt newer entry should not prevent recovery from an older key.
+      }
+    }
+    return structuredClone(DEFAULT_THEME)
   } catch {
     return structuredClone(DEFAULT_THEME)
   }
@@ -264,9 +363,20 @@ export function spacingScale(baseSpacing: number, density: Density): Record<stri
 export function themeVariables(theme: ThemeConfig, mode: ThemeMode): Record<string, string> {
   const palette = theme[mode]
   const definition = getStylePreset(theme.preset) ?? STYLE_PRESETS[0]
+  const presetStyle = recipeStyle(definition)
   const semantic = Object.fromEntries(PALETTE_KEYS.map((key) => [`${kebab(key)}`, palette[key]]))
   const shadow = { none: "none", soft: "0 2px 10px rgb(0 0 0 / 0.08)", medium: "0 8px 24px rgb(0 0 0 / 0.14)", strong: "0 14px 40px rgb(0 0 0 / 0.24)" }[theme.shadow]
   const contentMax = { narrow: "960px", standard: "1200px", wide: "1540px" }[theme.contentWidth]
+  const legacyRadiusChanged = theme.radius !== presetStyle.radius
+  const controlRadius = theme.controlRadius !== presetStyle.controlRadius ? theme.controlRadius : legacyRadiusChanged ? theme.radius : theme.controlRadius
+  const surfaceRadius = theme.surfaceRadius !== presetStyle.surfaceRadius ? theme.surfaceRadius : legacyRadiusChanged ? Math.min(48, theme.radius + presetStyle.surfaceRadius - presetStyle.controlRadius) : theme.surfaceRadius
+  const motion = resolveMotionRecipe(theme.motionPreset, theme.motionSpeed)
+  const motionFast = motion.durationMs === 0 ? 0 : Math.max(60, Math.round(motion.durationMs * 0.65))
+  const motionSlow = motion.durationMs === 0 ? 0 : Math.round(motion.durationMs * 1.45)
+  const surfaceShadow = theme.surfaceTreatment === "flat" || theme.surfaceTreatment === "outline" ? "none" :
+    theme.surfaceTreatment === "elevated" && shadow === "none" ? "0 8px 24px rgb(0 0 0 / 0.14)" : shadow
+  const surfaceBorderWidth = theme.surfaceTreatment === "flat" ? "0px" :
+    theme.surfaceTreatment === "outline" || theme.surfaceTreatment === "glass" ? `${Math.max(1, theme.borderWidth)}px` : `${theme.borderWidth}px`
   return {
     ...semantic,
     ...spacingScale(theme.baseSpacing, theme.density),
@@ -275,9 +385,13 @@ export function themeVariables(theme: ThemeConfig, mode: ThemeMode): Record<stri
     muted: palette.mutedForeground, line: palette.border, accent: palette.primary,
     "accent-light": palette.secondary, danger: palette.destructive,
     "destructive-foreground": bestContrastingColor(palette.destructive),
-    radius: `${theme.radius}px`, "radius-sm": `${Math.max(0, theme.radius - 4)}px`,
-    "radius-md": `${theme.radius}px`, "radius-lg": `${theme.radius + 4}px`, "radius-xl": `${theme.radius + 8}px`,
-    shadow, "shadow-card": shadow, "border-width": `${theme.borderWidth}px`,
+    radius: `${controlRadius}px`, "control-radius": `${controlRadius}px`, "surface-radius": `${surfaceRadius}px`,
+    "radius-sm": `${Math.max(0, controlRadius - 4)}px`,
+    "radius-md": `${controlRadius}px`, "radius-lg": `${surfaceRadius}px`, "radius-xl": `${surfaceRadius + 4}px`,
+    shadow, "shadow-card": surfaceShadow, "border-width": `${theme.borderWidth}px`,
+    "surface-treatment": theme.surfaceTreatment, "surface-border-width": surfaceBorderWidth,
+    "surface-shadow": surfaceShadow, "surface-blur": theme.surfaceTreatment === "glass" ? "18px" : "0px",
+    "surface-opacity": theme.surfaceTreatment === "glass" ? "0.78" : "1",
     "type-scale": String(theme.typeScale), "content-max": contentMax, "content-width": contentMax,
     "font-heading": theme.headingFont, "font-body": theme.bodyFont,
     "font-mono": "'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -285,8 +399,8 @@ export function themeVariables(theme: ThemeConfig, mode: ThemeMode): Record<stri
     "text-base": `calc(14px * ${theme.typeScale})`, "text-lg": `calc(17px * ${theme.typeScale})`,
     "text-title": `calc(28px * ${theme.typeScale})`, "text-display": `calc(58px * ${theme.typeScale})`,
     "line-body": definition.recipe.typography === "editorial-serif" ? "1.7" : "1.55",
-    "heading-weight": definition.recipe.typography === "display" ? "800" : definition.recipe.typography === "editorial-serif" ? "600" : "700",
-    "heading-tracking": definition.recipe.typography === "display" ? "-0.055em" : "-0.035em",
+    "heading-weight": String(theme.headingWeight), "body-weight": String(theme.bodyWeight),
+    tracking: `${theme.tracking}em`, "heading-tracking": `${theme.tracking}em`, "body-tracking": `${theme.tracking}em`,
     "surface-padding": `var(--space-${theme.density === "compact" ? 4 : theme.density === "comfortable" ? 8 : 6})`,
     "layout-gap": `var(--space-${theme.density === "compact" ? 3 : theme.density === "comfortable" ? 6 : 4})`,
     "section-gap": `var(--space-${theme.density === "compact" ? 8 : 12})`,
@@ -296,8 +410,33 @@ export function themeVariables(theme: ThemeConfig, mode: ThemeMode): Record<stri
     "table-cell-padding-y": `var(--space-${theme.density === "compact" ? 2 : theme.density === "comfortable" ? 4 : 3})`,
     "card-min-height": theme.density === "compact" ? "190px" : theme.density === "comfortable" ? "265px" : "235px",
     "section-heading-gap": `var(--space-${theme.density === "compact" ? 3 : theme.density === "comfortable" ? 6 : 4})`,
-    "radius-control": `${theme.radius}px`, "radius-surface": `${theme.radius + 4}px`, "radius-full": "999px",
-    "motion-fast": "150ms", "motion-base": "240ms",
+    "radius-control": `${controlRadius}px`, "radius-surface": `${surfaceRadius}px`, "radius-full": "999px",
+    "motion-preset": theme.motionPreset, "motion-speed": theme.motionSpeed,
+    "motion-duration": `${motion.durationMs}ms`, "motion-easing": motion.easing,
+    "motion-distance": `${motion.distancePx}px`, "motion-overlay-behavior": motion.overlayBehavior,
+    "motion-scale-from": String(motion.scaleFrom), "motion-overlay-opacity": motion.overlayBehavior === "none" ? "1" : "0",
+    "motion-fast": `${motionFast}ms`, "motion-base": `${motion.durationMs}ms`, "motion-slow": `${motionSlow}ms`,
+    "loading-style": theme.loadingStyle,
+  }
+}
+
+export type ThemeDataAttributes = {
+  "data-theme-version": `${typeof THEME_VERSION}`
+  "data-motion-preset": MotionPreset
+  "data-motion-speed": MotionSpeed
+  "data-motion-overlay": ReturnType<typeof resolveMotionRecipe>["overlayBehavior"]
+  "data-loading-style": LoadingStyle
+  "data-surface-treatment": SurfaceTreatment
+}
+
+export function themeDataAttributes(theme: ThemeConfig): ThemeDataAttributes {
+  return {
+    "data-theme-version": String(THEME_VERSION) as `${typeof THEME_VERSION}`,
+    "data-motion-preset": theme.motionPreset,
+    "data-motion-speed": theme.motionSpeed,
+    "data-motion-overlay": resolveMotionRecipe(theme.motionPreset, theme.motionSpeed).overlayBehavior,
+    "data-loading-style": theme.loadingStyle,
+    "data-surface-treatment": theme.surfaceTreatment,
   }
 }
 
@@ -311,6 +450,10 @@ export function applyTheme(theme: ThemeConfig, mode: ThemeMode, target: HTMLElem
   target.dataset.density = theme.density
   target.dataset.themeDensity = theme.density
   target.ownerDocument.documentElement.dataset.themeMode = mode
+  for (const [name, value] of Object.entries(themeDataAttributes(theme))) {
+    target.setAttribute(name, value)
+    target.ownerDocument.documentElement.setAttribute(name, value)
+  }
 }
 
 function cssBlock(selector: string, variables: Record<string, string>): string {
@@ -319,7 +462,8 @@ function cssBlock(selector: string, variables: Record<string, string>): string {
 }
 
 export function exportThemeCss(theme: ThemeConfig): string {
-  return `${cssBlock(":root", themeVariables(theme, "light"))}\n\n${cssBlock(".dark", themeVariables(theme, "dark"))}\n`
+  const attributes = Object.entries(themeDataAttributes(theme)).map(([name, value]) => `${name}="${value}"`).join(" ")
+  return `/* Apply to the theme scope: ${attributes} */\n${cssBlock(":root", themeVariables(theme, "light"))}\n\n${cssBlock(".dark", themeVariables(theme, "dark"))}\n`
 }
 
 export function auditThemeContrast(theme: ThemeConfig, mode: ThemeMode): Record<string, ContrastCheck> {

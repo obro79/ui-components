@@ -2,6 +2,9 @@
    user choices and shared density roles remain authoritative everywhere. */
 .app.theme-scope > main {
   font-size: var(--text-base, 14px);
+  font-family: var(--font-body, Inter, ui-sans-serif, system-ui, sans-serif);
+  font-weight: var(--body-weight, 400);
+  letter-spacing: var(--body-tracking, 0em);
   line-height: var(--line-body, 1.55);
 }
 
@@ -79,6 +82,32 @@
   box-shadow: var(--shadow-card, var(--shadow));
 }
 
+/* Surface treatment is an explicit global override, so it intentionally wins
+   over the active preset while leaving layout and decoration intact. */
+.app.theme-scope[data-surface-treatment="flat"] :is(.card,.specimen,.ui-dialog-content,.ui-alert-dialog-content,.ui-popover-content,.builder-surface) {
+  border-color: transparent;
+  background: var(--surface);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.app.theme-scope[data-surface-treatment="outline"] :is(.card,.specimen,.ui-dialog-content,.ui-alert-dialog-content,.ui-popover-content,.builder-surface) {
+  border: var(--surface-border-width, 1px) solid var(--border, var(--line));
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.app.theme-scope[data-surface-treatment="elevated"] :is(.card,.specimen,.ui-dialog-content,.ui-alert-dialog-content,.ui-popover-content,.builder-surface) {
+  background: var(--surface);
+  box-shadow: var(--surface-shadow, var(--shadow-card));
+  backdrop-filter: none;
+}
+.app.theme-scope[data-surface-treatment="glass"] :is(.card,.specimen,.ui-dialog-content,.ui-alert-dialog-content,.ui-popover-content,.builder-surface) {
+  border: var(--surface-border-width, 1px) solid color-mix(in srgb, var(--border, var(--line)) 66%, transparent);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  box-shadow: var(--surface-shadow, var(--shadow-card));
+  backdrop-filter: blur(var(--surface-blur, 18px)) saturate(1.15);
+}
+
 .app.theme-scope .badge { border-radius: var(--radius-full, 999px); }
 .app.theme-scope :is(.switch input,.ui-progress-track) { border-radius: var(--radius-full, 999px); }
 .appearance-controls .segmented-control { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -100,3 +129,6 @@
 @media (max-width: 850px) {
   .app.theme-scope[data-content-width-overridden="true"] > main { width: 100%; max-width: none; }
 }
+
+.builder-essentials-fallback { min-height: 320px; display: grid; place-items: center; align-content: center; gap: var(--space-4, 16px); padding-block: var(--space-12, 48px); border-block: var(--border-width, 1px) solid var(--border, var(--line)); color: var(--muted-foreground, var(--muted)); }
+.builder-essentials-fallback p { margin: 0; font-size: var(--text-sm, 12px); }

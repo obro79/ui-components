@@ -1,6 +1,6 @@
 /* Curated visual systems --------------------------------------------------
    These rules are intentionally loaded after the generic recipe engine.
-   They turn the 20 active presets into complete, stable page compositions. */
+   They turn the 24 active presets into complete, stable page compositions. */
 
 .app.theme-scope > .toast { position: fixed; z-index: 140; }
 
@@ -311,6 +311,56 @@
 .theme-scope[data-style-id="material-3-inspired"] :is(.button,.comparison-button,.customizer-inline button:not(.style-selector-card):not(.font-pair-card)):hover { box-shadow: inset 0 0 0 999px rgb(0 0 0 / .05); }
 .theme-scope[data-style-id="material-3-inspired"] :is(input:not([type="range"]):not([type="color"]),select) { min-height: 48px; border-radius: 12px 12px 0 0; background: color-mix(in srgb,var(--accent-light) 58%,var(--surface)); }
 
+/* 21 — Claymorphism */
+.theme-scope[data-style-id="claymorphism"] main { max-width: 1400px; }
+.theme-scope[data-style-id="claymorphism"] .page-hero { position: relative; isolation: isolate; overflow: hidden; padding: clamp(var(--space-8,32px),5vw,var(--space-16,64px)); border: 1px solid color-mix(in srgb,var(--accent) 18%,var(--line)); border-radius: 38px; background: linear-gradient(145deg,color-mix(in srgb,var(--surface) 94%,white),color-mix(in srgb,var(--accent) 13%,var(--surface))); box-shadow: inset 9px 9px 18px rgb(255 255 255 / .66),inset -10px -10px 22px color-mix(in srgb,var(--accent) 10%,transparent),0 24px 48px rgb(71 85 105 / .14); }
+.theme-scope[data-style-id="claymorphism"] .page-hero::after { content: ""; position: absolute; z-index: -1; right: -58px; top: -74px; width: 250px; aspect-ratio: 1; border-radius: 44% 56% 62% 38% / 54% 38% 62% 46%; background: color-mix(in srgb,var(--accent) 26%,var(--surface)); box-shadow: inset 20px 18px 28px rgb(255 255 255 / .42),inset -18px -20px 30px color-mix(in srgb,var(--accent) 22%,transparent),0 24px 36px rgb(71 85 105 / .14); pointer-events: none; }
+.theme-scope[data-style-id="claymorphism"] .hero-copy h1 { --hero-size: clamp(calc(54px * var(--type-scale)),calc(6.3vw * var(--type-scale)),calc(88px * var(--type-scale))); max-width: 11ch; font-weight: 800; }
+.theme-scope[data-style-id="claymorphism"] :is(.specimen,.card,.comparison-card,.customizer-inline) { border: 1px solid color-mix(in srgb,var(--accent) 16%,var(--line)); border-radius: 28px; background: linear-gradient(145deg,color-mix(in srgb,var(--surface) 96%,white),color-mix(in srgb,var(--accent) 8%,var(--surface))); box-shadow: inset 5px 5px 10px rgb(255 255 255 / .58),inset -6px -6px 12px color-mix(in srgb,var(--accent) 10%,transparent),0 13px 25px rgb(71 85 105 / .13); }
+.theme-scope[data-style-id="claymorphism"] .specimen-bar { border-color: color-mix(in srgb,var(--accent) 14%,var(--line)); background: transparent; }
+.theme-scope[data-style-id="claymorphism"] :is(.button,.badge,.comparison-button,.customizer-inline button:not(.style-selector-card):not(.font-pair-card)) { border-color: color-mix(in srgb,var(--accent) 22%,var(--line)); border-radius: 16px; box-shadow: inset 2px 2px 4px rgb(255 255 255 / .45),inset -3px -3px 5px rgb(15 23 42 / .09),0 6px 12px rgb(71 85 105 / .12); }
+.theme-scope[data-style-id="claymorphism"] :is(.button,.comparison-button,.customizer-inline button:not(.style-selector-card):not(.font-pair-card)):active { transform: translateY(2px); box-shadow: inset 2px 3px 6px rgb(15 23 42 / .16),inset -1px -1px 3px rgb(255 255 255 / .46); }
+.theme-scope[data-style-id="claymorphism"] .swatch { border: 0; border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%; box-shadow: inset 3px 3px 5px rgb(255 255 255 / .46),inset -3px -3px 6px rgb(15 23 42 / .12),0 5px 9px rgb(71 85 105 / .14); }
+
+/* 22 — Organic / Biophilic */
+.theme-scope[data-style-id="organic-biophilic"] main { max-width: 1160px; }
+.theme-scope[data-style-id="organic-biophilic"] .page-hero { position: relative; isolation: isolate; overflow: hidden; padding: clamp(var(--space-8,32px),6vw,var(--space-16,64px)); border: 1px solid color-mix(in srgb,var(--accent) 26%,var(--line)); border-radius: 52px 18px 52px 18px; background: linear-gradient(135deg,color-mix(in srgb,var(--surface) 94%,#f4efe1),color-mix(in srgb,var(--accent) 11%,var(--surface))); }
+.theme-scope[data-style-id="organic-biophilic"] .page-hero::after { content: ""; position: absolute; z-index: -1; right: -28px; bottom: -52px; width: 220px; height: 140px; border-radius: 100% 0 100% 0; background: color-mix(in srgb,var(--accent) 20%,transparent); box-shadow: -90px -38px 0 color-mix(in srgb,var(--accent) 8%,transparent); transform: rotate(-12deg); pointer-events: none; }
+.theme-scope[data-style-id="organic-biophilic"] .hero-copy h1 { --hero-size: clamp(calc(54px * var(--type-scale)),calc(6.2vw * var(--type-scale)),calc(84px * var(--type-scale))); max-width: 12ch; line-height: .96; }
+.theme-scope[data-style-id="organic-biophilic"] .spec-section { border-bottom: 1px solid color-mix(in srgb,var(--accent) 22%,var(--line)); }
+.theme-scope[data-style-id="organic-biophilic"] .section-heading h2 { font-weight: 500; }
+.theme-scope[data-style-id="organic-biophilic"] .section-heading::after { content: ""; width: 42px; height: 18px; margin-left: auto; border: 1px solid color-mix(in srgb,var(--accent) 52%,transparent); border-radius: 100% 0; transform: rotate(-18deg); }
+.theme-scope[data-style-id="organic-biophilic"] :is(.specimen,.card,.comparison-card,.customizer-inline) { border-color: color-mix(in srgb,var(--accent) 24%,var(--line)); background: linear-gradient(150deg,color-mix(in srgb,var(--surface) 96%,#f1ead9),color-mix(in srgb,var(--accent) 5%,var(--surface))); box-shadow: 0 12px 30px rgb(51 65 45 / .09); }
+.theme-scope[data-style-id="organic-biophilic"] :is(.button-default,.comparison-button--primary) { background: color-mix(in srgb,var(--accent) 88%,#24351f); }
+.theme-scope[data-style-id="organic-biophilic"] :is(.button,.badge,.comparison-button,.customizer-inline button:not(.style-selector-card):not(.font-pair-card)) { border-radius: 999px; }
+.theme-scope[data-style-id="organic-biophilic"] .swatch { border-radius: 100% 0 100% 0; transform: rotate(-12deg); }
+
+/* 23 — Art Deco */
+.theme-scope[data-style-id="art-deco"] main { max-width: 1320px; }
+.theme-scope[data-style-id="art-deco"] .page-hero { position: relative; isolation: isolate; grid-template-columns: minmax(0,1fr); overflow: hidden; padding: clamp(var(--space-10,40px),6vw,calc(var(--space-16,64px) + var(--space-4,16px))); border: 1px solid var(--accent); border-radius: 0; background: linear-gradient(135deg,color-mix(in srgb,var(--surface) 92%,#070707),var(--surface)); box-shadow: inset 0 0 0 5px var(--surface),inset 0 0 0 6px color-mix(in srgb,var(--accent) 72%,transparent),inset 0 0 64px color-mix(in srgb,var(--accent) 7%,transparent); }
+.theme-scope[data-style-id="art-deco"] .page-hero::after { content: "◆"; position: absolute; left: 50%; top: 15px; color: var(--accent); font-size: 15px; translate: -50% 0; text-shadow: -26px 0 0 color-mix(in srgb,var(--accent) 54%,transparent),26px 0 0 color-mix(in srgb,var(--accent) 54%,transparent); }
+.theme-scope[data-style-id="art-deco"] .hero-copy { text-align: center; }
+.theme-scope[data-style-id="art-deco"] .hero-copy h1 { --hero-size: clamp(calc(52px * var(--type-scale)),calc(6vw * var(--type-scale)),calc(86px * var(--type-scale))); max-width: 15ch; margin-inline: auto; letter-spacing: .035em; line-height: .92; text-transform: uppercase; }
+.theme-scope[data-style-id="art-deco"] .hero-copy .lede { margin-inline: auto; }
+.theme-scope[data-style-id="art-deco"] .hero-toolbar { justify-content: center; max-width: none; padding-top: var(--space-6,24px); border-top: 1px solid color-mix(in srgb,var(--accent) 62%,var(--line)); }
+.theme-scope[data-style-id="art-deco"] .section-heading { justify-content: center; padding-block: var(--space-3,12px); border-block: 1px solid color-mix(in srgb,var(--accent) 62%,var(--line)); text-align: center; text-transform: uppercase; }
+.theme-scope[data-style-id="art-deco"] .section-heading h2 { letter-spacing: .08em; }
+.theme-scope[data-style-id="art-deco"] :is(.specimen,.card,.comparison-card,.customizer-inline) { border: 1px solid color-mix(in srgb,var(--accent) 78%,var(--line)); border-radius: 0; background: color-mix(in srgb,var(--surface) 95%,#080808); box-shadow: inset 0 0 0 3px var(--surface),inset 0 0 0 4px color-mix(in srgb,var(--accent) 42%,transparent),0 14px 32px rgb(0 0 0 / .14); }
+.theme-scope[data-style-id="art-deco"] :is(.specimen-bar,th,.badge) { border-color: color-mix(in srgb,var(--accent) 54%,var(--line)); letter-spacing: .15em; text-transform: uppercase; }
+.theme-scope[data-style-id="art-deco"] :is(.button,.comparison-button,.customizer-inline button:not(.style-selector-card):not(.font-pair-card)) { border-color: var(--accent); border-radius: 0; text-transform: uppercase; letter-spacing: .08em; }
+.theme-scope[data-style-id="art-deco"] :is(.button-default,.comparison-button--primary) { background: var(--accent); color: #111; }
+
+/* 24 — Skeuomorphism */
+.theme-scope[data-style-id="skeuomorphism"] main { max-width: 1400px; }
+.theme-scope[data-style-id="skeuomorphism"] .page-hero { padding: clamp(var(--space-8,32px),5vw,var(--space-16,64px)); border: 1px solid color-mix(in srgb,var(--ink) 22%,var(--line)); border-radius: 18px; background: linear-gradient(180deg,color-mix(in srgb,var(--surface) 90%,white),color-mix(in srgb,var(--surface) 86%,var(--accent-light))); box-shadow: inset 0 2px 1px rgb(255 255 255 / .78),inset 0 -3px 5px rgb(15 23 42 / .14),0 18px 35px rgb(15 23 42 / .18); }
+.theme-scope[data-style-id="skeuomorphism"] .hero-copy h1 { --hero-size: clamp(calc(52px * var(--type-scale)),calc(5.8vw * var(--type-scale)),calc(82px * var(--type-scale))); text-shadow: 0 1px 0 rgb(255 255 255 / .62); }
+.theme-scope[data-style-id="skeuomorphism"] :is(.specimen,.card,.comparison-card,.customizer-inline) { border: 1px solid color-mix(in srgb,var(--ink) 24%,var(--line)); border-radius: 14px; background: linear-gradient(180deg,color-mix(in srgb,var(--surface) 94%,white),color-mix(in srgb,var(--surface) 86%,var(--accent-light))); box-shadow: inset 0 2px 1px rgb(255 255 255 / .74),inset 0 -2px 4px rgb(15 23 42 / .14),0 9px 18px rgb(15 23 42 / .16); }
+.theme-scope[data-style-id="skeuomorphism"] .specimen-bar { background: repeating-linear-gradient(0deg,color-mix(in srgb,var(--surface) 90%,white) 0 2px,color-mix(in srgb,var(--surface) 84%,var(--accent-light)) 2px 4px); box-shadow: inset 0 1px rgb(255 255 255 / .72),inset 0 -1px rgb(15 23 42 / .12); color: var(--ink); }
+.theme-scope[data-style-id="skeuomorphism"] :is(.button,.comparison-button,.customizer-inline button:not(.style-selector-card):not(.font-pair-card)) { border-color: color-mix(in srgb,var(--ink) 28%,var(--line)); background-image: linear-gradient(180deg,rgb(255 255 255 / .24),transparent 48%,rgb(15 23 42 / .11)); box-shadow: inset 0 2px 1px rgb(255 255 255 / .55),inset 0 -2px 3px rgb(15 23 42 / .17),0 4px 7px rgb(15 23 42 / .17); text-shadow: 0 1px rgb(255 255 255 / .2); }
+.theme-scope[data-style-id="skeuomorphism"] :is(.button,.comparison-button,.customizer-inline button:not(.style-selector-card):not(.font-pair-card)):active { transform: translateY(2px); box-shadow: inset 0 3px 6px rgb(15 23 42 / .26),inset 0 -1px rgb(255 255 255 / .34); }
+.theme-scope[data-style-id="skeuomorphism"] :is(input:not([type="range"]):not([type="color"]),select,.table-wrap) { border-color: color-mix(in srgb,var(--ink) 28%,var(--line)); background: color-mix(in srgb,var(--surface) 82%,var(--bg)); box-shadow: inset 2px 3px 7px rgb(15 23 42 / .2),inset -1px -1px 2px rgb(255 255 255 / .62); }
+.theme-scope[data-style-id="skeuomorphism"] .swatch { border-color: color-mix(in srgb,var(--ink) 34%,var(--line)); box-shadow: inset 2px 2px 3px rgb(255 255 255 / .56),inset -3px -3px 5px rgb(15 23 42 / .18),0 3px 5px rgb(15 23 42 / .14); }
+
 /* Selector thumbnails mirror the same high-signal DNA without applying the
    full-page layout rules inside the customizer. */
 .style-selector-card[data-geometry="square"] { border-radius: 0; }
@@ -340,6 +390,20 @@
 .style-selector-card[data-style-id="retrofuturism"] .style-selector-preview__button { background: linear-gradient(#fff,#8b5cf6,#fff); }
 .style-selector-card[data-style-id="terminal"] .style-selector-preview { border-color: #38d878; font-family: monospace; background: #0d2018; }
 .style-selector-card[data-style-id="material-3-inspired"] .style-selector-preview { border-radius: 18px; background: #eee9f6; box-shadow: 0 3px 8px rgb(0 0 0 / .1); }
+.style-selector-card[data-style-id="claymorphism"] { border-radius: 18px; }
+.style-selector-card[data-style-id="claymorphism"] .style-selector-preview { border-radius: 17px 17px 0 0; background: linear-gradient(145deg,#fff2ed,#f3c8c8); box-shadow: inset 5px 5px 9px rgb(255 255 255 / .72),inset -5px -5px 10px rgb(146 64 75 / .12); }
+.style-selector-card[data-style-id="claymorphism"] .style-selector-preview__cards span { border: 0; border-radius: 9px; box-shadow: inset 2px 2px 4px rgb(255 255 255 / .62),inset -3px -3px 5px rgb(146 64 75 / .14),0 4px 7px rgb(71 85 105 / .12); }
+.style-selector-card[data-style-id="organic-biophilic"] .style-selector-preview { border-radius: 20px 7px 20px 7px; background: radial-gradient(ellipse at 86% 90%,#bfd1b6 0 22%,transparent 23%),linear-gradient(145deg,#faf7ed,#e6eddf); }
+.style-selector-card[data-style-id="organic-biophilic"] .style-selector-preview__heading { width: 66%; height: 8px; border-radius: 100% 0; background: #36523a; }
+.style-selector-card[data-style-id="organic-biophilic"] .style-selector-preview__cards span { border-radius: 14px 5px 14px 5px; border-color: #9fb09a; }
+.style-selector-card[data-style-id="art-deco"] .style-selector-preview { border: 1px solid #c39a4b; border-radius: 0; background: #15130f; box-shadow: inset 0 0 0 3px #15130f,inset 0 0 0 4px #8e6e32; }
+.style-selector-card[data-style-id="art-deco"] .style-selector-preview__bar { border-color: #8e6e32; background: #15130f; }
+.style-selector-card[data-style-id="art-deco"] .style-selector-preview__heading { width: 72%; height: 7px; margin-inline: auto; background: #d0aa5b; }
+.style-selector-card[data-style-id="art-deco"] .style-selector-preview__copy { width: 46%; margin-inline: auto; background: #e6d5ad; opacity: .58; }
+.style-selector-card[data-style-id="art-deco"] .style-selector-preview__row { justify-content: center; }
+.style-selector-card[data-style-id="skeuomorphism"] .style-selector-preview { border-color: #7f8c8f; border-radius: 8px; background: linear-gradient(#edf1f1,#aebabe); box-shadow: inset 0 2px 1px white,inset 0 -3px 4px rgb(15 23 42 / .25),0 4px 7px rgb(15 23 42 / .2); }
+.style-selector-card[data-style-id="skeuomorphism"] .style-selector-preview__button { background: linear-gradient(#6e9dae,#356879); box-shadow: inset 0 2px 1px rgb(255 255 255 / .45),inset 0 -2px 3px rgb(15 23 42 / .26),0 2px 3px rgb(15 23 42 / .22); }
+.style-selector-card[data-style-id="skeuomorphism"] .style-selector-preview__cards span { border-color: #748286; background: linear-gradient(#f3f5f5,#c9d0d1); box-shadow: inset 0 1px white,inset 0 -2px 3px rgb(15 23 42 / .18),0 2px 4px rgb(15 23 42 / .17); }
 
 @keyframes curated-cursor { 50% { opacity: 0; } }
 @keyframes liquid-specular { from { transform: translate3d(-4%,-2%,0); opacity: .72; } to { transform: translate3d(4%,2%,0); opacity: 1; } }

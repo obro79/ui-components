@@ -138,7 +138,7 @@
 
 .customizer-tabs {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 2px;
   padding: 8px 12px 0;
   border-bottom: 1px solid var(--theme-border, #dedfd7);
@@ -391,6 +391,8 @@
 .segmented-control { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 12px; padding: 3px; border: 1px solid var(--border, var(--line)); border-radius: var(--radius-md, 11px); background: var(--background, var(--bg)); }
 .segmented-control button { min-height: 40px; border: 0; border-radius: var(--radius-sm, 7px); color: var(--muted-foreground, var(--muted)); background: transparent; font-size: 11px; font-weight: 700; }
 .segmented-control button.active { color: var(--foreground, var(--ink)); background: var(--surface); box-shadow: 0 1px 4px rgb(0 0 0 / 12%); }
+.segmented-control--five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.segmented-control--five button { padding-inline: 4px; font-size: 10px; }
 .mode-tabs { grid-template-columns: 1fr 1fr; }
 .range-field { display: grid; gap: 5px; margin-top: 14px; color: var(--foreground, var(--ink)); font-size: 12px; font-weight: 700; }
 .range-field span { display: flex; justify-content: space-between; }.range-field output { color: var(--muted-foreground, var(--muted)); font-family: 'DM Mono', monospace; }

@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react"
-import { Check, ChevronDown, Code2, Copy, Download, LayoutGrid, Palette, RotateCcw, SlidersHorizontal, Type } from "lucide-react"
+import { Activity, Check, ChevronDown, Code2, Copy, Download, LayoutGrid, Palette, RotateCcw, SlidersHorizontal, Type } from "lucide-react"
 import {
   accessibleFocusRing,
   bestContrastingColor,
@@ -12,17 +12,18 @@ import {
 import { PaletteWizard } from "./PaletteWizard"
 import { StyleSelector } from "./StyleSelector"
 import { FONT_PAIRS, FontSelector, type FontPair } from "./FontSelector"
-import { downloadStarterKitZip } from "../export-project"
+import { MotionPlayground } from "./MotionPlayground"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Button } from "./ui/button"
 
-export type CustomizerPanel = "styles" | "colors" | "type" | "layout" | "tokens"
+export type CustomizerPanel = "styles" | "colors" | "type" | "layout" | "motion" | "tokens"
 
 const CUSTOMIZER_PANELS = [
   { id: "styles", label: "Styles", Icon: LayoutGrid },
   { id: "colors", label: "Colors", Icon: Palette },
   { id: "type", label: "Type", Icon: Type },
   { id: "layout", label: "Layout", Icon: SlidersHorizontal },
+  { id: "motion", label: "Motion", Icon: Activity },
   { id: "tokens", label: "Tokens", Icon: Code2 },
 ] as const
 
@@ -126,6 +127,7 @@ export function ThemeCustomizer({
   const exportKit = async () => {
     setExportState("working")
     try {
+      const { downloadStarterKitZip } = await import("../export-project")
       await downloadStarterKitZip(config, `${config.preset}-theme`, previewMode)
       setExportState("done")
     } catch {
@@ -179,6 +181,27 @@ export function ThemeCustomizer({
                   onChange={(pair) => updateConfig({ headingFont: pair.headingFamily, bodyFont: pair.bodyFamily })}
                 />
               </section>
+              <section className="customizer-section" aria-labelledby="type-tuning-title">
+                <div className="customizer-section-heading">
+                  <div><h3 id="type-tuning-title">Typography tuning</h3><p>Adjust hierarchy without changing the selected font pairing.</p></div>
+                </div>
+                <label className="range-field">
+                  <span>Type scale <output className="customizer-value">{config.typeScale.toFixed(2)}×</output></span>
+                  <input type="range" aria-label="Type scale" min="0.9" max="1.15" step="0.05" value={config.typeScale} onChange={(event) => updateConfig({ typeScale: Number(event.target.value) })} />
+                </label>
+                <label className="range-field">
+                  <span>Heading weight <output className="customizer-value">{config.headingWeight}</output></span>
+                  <input type="range" aria-label="Heading weight" min="400" max="900" step="50" value={config.headingWeight} onChange={(event) => updateConfig({ headingWeight: Number(event.target.value) })} />
+                </label>
+                <label className="range-field">
+                  <span>Body weight <output className="customizer-value">{config.bodyWeight}</output></span>
+                  <input type="range" aria-label="Body weight" min="300" max="700" step="50" value={config.bodyWeight} onChange={(event) => updateConfig({ bodyWeight: Number(event.target.value) })} />
+                </label>
+                <label className="range-field">
+                  <span>Letter spacing <output className="customizer-value">{config.tracking.toFixed(3)}em</output></span>
+                  <input type="range" aria-label="Letter spacing" min="-0.08" max="0.08" step="0.005" value={config.tracking} onChange={(event) => updateConfig({ tracking: Number(event.target.value) })} />
+                </label>
+              </section>
             </TabsContent>
 
             <TabsContent className="customizer-panel" value="colors" forceMount>
@@ -229,19 +252,38 @@ export function ThemeCustomizer({
 
             <label className="range-field">
               <span>
-                Corner radius
-                <output className="customizer-value">{config.radius}px</output>
+                Control radius
+                <output className="customizer-value">{config.controlRadius}px</output>
               </span>
               <input
                 type="range"
-                aria-label="Corner radius"
+                aria-label="Control radius"
                 min="0"
                 max="24"
                 step="1"
-                value={config.radius}
-                onChange={(e) => updateConfig({ radius: Number(e.target.value) })}
+                value={config.controlRadius}
+                onChange={(e) => updateConfig({ controlRadius: Number(e.target.value), radius: Number(e.target.value) })}
               />
             </label>
+
+            <label className="range-field">
+              <span>
+                Surface radius
+                <output className="customizer-value">{config.surfaceRadius}px</output>
+              </span>
+              <input type="range" aria-label="Surface radius" min="0" max="48" step="1" value={config.surfaceRadius} onChange={(event) => updateConfig({ surfaceRadius: Number(event.target.value) })} />
+            </label>
+
+            <div className="control-group">
+              <span className="control-label" id="surface-treatment-label">Surface treatment</span>
+              <div className="segmented-control segmented-control--five" role="group" aria-labelledby="surface-treatment-label">
+                {(["preset", "flat", "outline", "elevated", "glass"] as const).map((surfaceTreatment) => (
+                  <button key={surfaceTreatment} type="button" aria-pressed={config.surfaceTreatment === surfaceTreatment} className={config.surfaceTreatment === surfaceTreatment ? "active" : ""} onClick={() => updateConfig({ surfaceTreatment })}>
+                    {surfaceTreatment[0].toUpperCase() + surfaceTreatment.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="control-group">
               <span className="control-label" id="shadow-label">Shadow</span>
@@ -276,21 +318,6 @@ export function ThemeCustomizer({
               />
             </label>
 
-            <label className="range-field">
-              <span>
-                Type scale
-                <output className="customizer-value">{config.typeScale.toFixed(2)}×</output>
-              </span>
-              <input
-                type="range"
-                aria-label="Type scale"
-                min="0.9"
-                max="1.15"
-                step="0.05"
-                value={config.typeScale}
-                onChange={(e) => updateConfig({ typeScale: Number(e.target.value) })}
-              />
-            </label>
           </section>
 
           <section className="customizer-section" aria-labelledby="layout-title">
@@ -314,6 +341,10 @@ export function ThemeCustomizer({
               ))}
             </div>
           </section>
+            </TabsContent>
+
+            <TabsContent className="customizer-panel" value="motion" forceMount>
+              <MotionPlayground config={config} onChange={updateConfig} />
             </TabsContent>
 
             <TabsContent className="customizer-panel" value="tokens" forceMount>

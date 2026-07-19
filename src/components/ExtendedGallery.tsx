@@ -14,6 +14,7 @@ import { Skeleton, SkeletonCard } from "./ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Tooltip } from "./ui/tooltip"
 import { LoadingPlayground } from "./LoadingPlayground"
+import type { LoadingStyle } from "../theme"
 import "../extended-components.css"
 
 function GallerySection({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
@@ -24,7 +25,7 @@ function GallerySpecimen({ title, children }: { title: string; children: React.R
   return <div className="specimen"><div className="specimen-bar"><span>{title}</span><span>Interactive</span></div><div className="specimen-content">{children}</div></div>
 }
 
-export function ExtendedGallery({ onAction }: { onAction: (message: string) => void }) {
+export function ExtendedGallery({ onAction, loadingStyle }: { onAction: (message: string) => void; loadingStyle: LoadingStyle }) {
   return <>
     <GallerySection id="navigation" label="Navigation">
       <div className="extended-stack">
@@ -60,7 +61,7 @@ export function ExtendedGallery({ onAction }: { onAction: (message: string) => v
           <GallerySpecimen title="Progress"><div className="progress-stack"><Progress label="Profile setup" value={72} showValue/><Progress label="Uploading assets"/><Progress label="Storage used" value={38} showValue/></div></GallerySpecimen>
         </div>
         <GallerySpecimen title="Alerts"><div className="alert-stack"><Alert variant="info" title="New component available" description="The command palette is ready to add." action={<Button variant="ghost" size="sm" onClick={() => onAction("Command palette details opened.")}>View</Button>}/><Alert variant="success" title="Theme saved" description="Your custom tokens are stored locally."/><Alert variant="warning" title="Contrast needs attention" description="Muted text is below AA on the selected surface."/><Alert variant="destructive" title="Build failed" description="Fix the missing export and try again."/></div></GallerySpecimen>
-        <GallerySpecimen title="Loading animations"><LoadingPlayground /></GallerySpecimen>
+        <GallerySpecimen title="Loading animations"><LoadingPlayground selected={loadingStyle} /></GallerySpecimen>
         <div className="two-col">
           <GallerySpecimen title="Empty state"><EmptyState icon={<Inbox size={25}/>} title="No components found" description="Try another filter or add your first custom component." action={<Button size="sm" onClick={() => onAction("Add component flow opened.")}><UserPlus size={15}/> Add component</Button>}/></GallerySpecimen>
           <GallerySpecimen title="Skeletons"><div className="skeleton-demo"><SkeletonCard/><div className="skeleton-list"><Skeleton shape="circle"/><div><Skeleton shape="text"/><Skeleton shape="text"/></div></div></div></GallerySpecimen>

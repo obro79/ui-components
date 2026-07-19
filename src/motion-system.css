@@ -1,0 +1,14 @@
+.app.theme-scope :is(.button, .card, .specimen, input, select, textarea, .ui-tabs-trigger, .ui-accordion-trigger, .ui-pagination-link) {
+  transition-duration: var(--motion-duration, 220ms);
+  transition-timing-function: var(--motion-easing, ease);
+}
+.app.theme-scope[data-motion-preset="none"] :is(.button, .card, .specimen, input, select, textarea, .ui-tabs-trigger, .ui-accordion-trigger, .ui-pagination-link) { transition: none; }
+.app.theme-scope :is(.ui-dialog-overlay, .ui-alert-dialog-overlay) { animation: theme-overlay-backdrop var(--motion-duration, 220ms) var(--motion-easing, ease) both; }
+.app.theme-scope :is(.ui-dialog-content, .ui-alert-dialog-content, .ui-popover-content, .menu, .builder-sheet__content, .builder-toast) { animation: theme-overlay-enter var(--motion-duration, 220ms) var(--motion-easing, ease) both; }
+.app.theme-scope[data-motion-preset="none"] :is(.ui-dialog-overlay, .ui-alert-dialog-overlay, .ui-dialog-content, .ui-alert-dialog-content, .ui-popover-content, .menu, .builder-sheet__content, .builder-toast) { animation: none; }
+@keyframes theme-overlay-backdrop { from { opacity: 0; } }
+@keyframes theme-overlay-enter { from { opacity: 0; translate: 0 var(--motion-distance, 0px); scale: var(--motion-scale-from, 1); } }
+@media (prefers-reduced-motion: reduce) {
+  .app.theme-scope :is(.button, .card, .specimen, input, select, textarea, .ui-tabs-trigger, .ui-accordion-trigger, .ui-pagination-link) { transition-duration: 1ms !important; }
+  .app.theme-scope :is(.ui-dialog-overlay, .ui-alert-dialog-overlay, .ui-dialog-content, .ui-alert-dialog-content, .ui-popover-content, .menu, .builder-sheet__content, .builder-toast) { animation: none !important; }
+}

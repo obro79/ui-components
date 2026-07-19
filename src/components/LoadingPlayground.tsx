@@ -1,17 +1,12 @@
 import { useState } from "react"
 import { Pause, Play } from "lucide-react"
+import { LOADING_STYLE_LABELS, LoaderVisual } from "./LoaderVisual"
+import type { LoadingStyle } from "../theme"
 import "../loading-playground.css"
 
-const loaders = [
-  { id: "spinner", label: "Spinner", visual: <span className="loader-spinner" /> },
-  { id: "dots", label: "Bouncing dots", visual: <span className="loader-dots"><i /><i /><i /></span> },
-  { id: "pulse", label: "Pulse", visual: <span className="loader-pulse"><i /></span> },
-  { id: "bars", label: "Equalizer bars", visual: <span className="loader-bars"><i /><i /><i /><i /></span> },
-  { id: "orbit", label: "Orbit", visual: <span className="loader-orbit"><i /><b /></span> },
-  { id: "skeleton", label: "Skeleton", visual: <span className="loader-skeleton"><i /><b><em /><em /><em /></b></span> },
-] as const
+const loaders = Object.entries(LOADING_STYLE_LABELS) as Array<[LoadingStyle, string]>
 
-export function LoadingPlayground() {
+export function LoadingPlayground({ selected = "spinner" }: { selected?: LoadingStyle }) {
   const [playing, setPlaying] = useState(true)
 
   return (
@@ -38,14 +33,14 @@ export function LoadingPlayground() {
       </p>
 
       <div className="loading-playground__grid" role="list" aria-label="Loading animation examples">
-        {loaders.map((loader) => (
-          <article className="loading-playground__item" role="listitem" key={loader.id}>
-            <div className="loading-playground__stage" role="img" aria-label={`${loader.label} loading indicator`}>
-              {loader.visual}
+        {loaders.map(([id, label]) => (
+          <article className="loading-playground__item" data-selected={id === selected || undefined} role="listitem" key={id}>
+            <div className="loading-playground__stage" role="img" aria-label={`${label} loading indicator`}>
+              <LoaderVisual style={id} />
             </div>
             <div className="loading-playground__label">
-              <strong>{loader.label}</strong>
-              <span>{loader.id === "skeleton" ? "Content placeholder" : "Loading indicator"}</span>
+              <strong>{label}</strong>
+              <span>{id === selected ? "Active theme loader" : id === "skeleton" ? "Content placeholder" : "Loading indicator"}</span>
             </div>
           </article>
         ))}

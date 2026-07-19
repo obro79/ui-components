@@ -1,7 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from "react"
 import { createPortal } from "react-dom"
 import { Bell, Copy, Edit3, Plus, Trash2, X } from "lucide-react"
-import { themeVariables } from "../theme"
+import { themeDataAttributes, themeVariables } from "../theme"
 import { getStylePreset } from "../presets"
 import type { SavedVariant } from "../variants"
 import "../comparison-workspace.css"
@@ -124,7 +124,7 @@ export function ComparisonWorkspace({ variants, onEdit, onDuplicate, onRemove, o
           {visibleVariants.map((variant) => {
             const preset = getStylePreset(variant.config.preset)!
             return (
-            <article className="comparison-preview theme-scope" key={variant.id} style={previewStyle(variant)} data-theme-mode={variant.previewMode} data-style-id={preset.id} data-layout={preset.recipe.layout} data-surface={preset.recipe.surface} data-treatment={preset.recipe.typography} data-geometry={preset.recipe.geometry} data-decoration={preset.recipe.decoration}>
+            <article className="comparison-preview theme-scope" key={variant.id} style={previewStyle(variant)} data-theme-mode={variant.previewMode} data-style-id={preset.id} data-layout={preset.recipe.layout} data-surface={preset.recipe.surface} data-treatment={preset.recipe.typography} data-geometry={preset.recipe.geometry} data-decoration={preset.recipe.decoration} {...themeDataAttributes(variant.config)}>
               <header className="comparison-preview__header">
                 <div className="comparison-preview__identity">
                   <span className="comparison-swatch" style={{ background: variant.config[variant.previewMode].primary }} aria-hidden="true" />
